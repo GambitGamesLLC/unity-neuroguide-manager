@@ -39,11 +39,3 @@ Copy of the DoTween plugin wrapped into a package.
 
 unity-static-coroutine [[Repo](https://github.com/GambitGamesLLC/unity-static-coroutine)]</br>
 Adds functionality to use coroutines from non-monobehaviour derived classes
-
-
-/// </summary>
-/// <param name="webUISystem"></param>
-//-----------------------------------------------------//
-public static void Destroy( WebUISystem webUISystem )
-//-----------------------------------------------------//
-```
