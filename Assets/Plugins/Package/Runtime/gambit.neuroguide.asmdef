@@ -1,5 +1,5 @@
 {
-    "name": "gambit.neurogear",
+    "name": "gambit.neuroguide",
     "rootNamespace": "",
     "references": [
         "gambit.singleton",
