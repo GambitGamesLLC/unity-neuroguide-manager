@@ -95,6 +95,6 @@ namespace gambit.neuroguide
 
         #endregion
 
-    } //END NeuroGuideManager
+    } //END NeuroGuideManager Class
 
-} //END Namespace
+} //END gambit.neuroguide Namespace

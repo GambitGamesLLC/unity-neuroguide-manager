@@ -4,7 +4,8 @@
     "references": [
         "gambit.singleton",
         "gambit.staticcoroutine",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "gambit.mathhelper"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -28,6 +29,11 @@
             "name": "com.demigiant.dotween",
             "expression": "",
             "define": "EXT_DOTWEEN "
+        },
+        {
+            "name": "com.gambit.mathhelper",
+            "expression": "",
+            "define": "GAMBIT_MATHHELPER"
         }
     ],
     "noEngineReferences": false
