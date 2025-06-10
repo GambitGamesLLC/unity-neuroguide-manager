@@ -12,14 +12,14 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "581992d53edfb988d38e216f836e9d9dc884838a"
+      "hash": "eaf40b1333816d811cb331c9b496724b733585a5"
     },
     "com.gambit.singleton": {
       "version": "https://github.com/GambitGamesLLC/unity-singleton.git?path=Assets/Plugins/Package",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "20990b17e88d500144f79c39d4bc974aee4467c8"
+      "hash": "9e46011d75335eaaf8b58fdbbcc76c367ab15b36"
     },
     "com.gambit.staticcoroutine": {
       "version": "https://github.com/GambitGamesLLC/unity-static-Coroutine.git?path=Assets/Plugins/Package",

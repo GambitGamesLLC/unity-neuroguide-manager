@@ -5,13 +5,58 @@
  * 
  ********************************************************/
 
+
+#region IMPORTS
+
 using System;
 using UnityEngine;
 using UnityEngine.UI;
 
+#if GAMBIT_SINGLETON
 using gambit.singleton;
+#else
+/// <summary>
+/// Fallback Singleton base class if GAMBIT_SINGLETON is not defined.
+/// </summary>
+/// <typeparam name="T">Type of the MonoBehaviour singleton.</typeparam>
+public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
+{
+    private static T instance;
+
+    /// <summary>
+    /// Gets the singleton instance, creating it if necessary.
+    /// </summary>
+    //---------------------------------------------//
+    public static T Instance
+    //---------------------------------------------//
+    {
+        get
+        {
+            if(instance == null)
+            {
+                instance = new GameObject( typeof( T ).Name ).AddComponent<T>();
+                GameObject.DontDestroyOnLoad( instance.gameObject );
+            }
+            return instance;
+        }
+    }
+
+} //END Singleton<T> class
+#endif
+
+#if GAMBIT_STATICCOROUTINE
 using gambit.staticcoroutine;
+#endif
+
+#if GAMBIT_MATHHELPER
 using gambit.mathhelper;
+#endif
+
+#if EXT_DOTWEEN
+using DG.Tweening;
+#endif
+
+#endregion
 
 namespace gambit.neuroguide
 {
@@ -40,8 +85,6 @@ namespace gambit.neuroguide
             /// Should we enable keyboard input to debug input values? Press 'Up' on the keyboard to raise the values "Read" by the debug NeuroGear Device
             /// </summary>
             public bool enableDebugKeyboardInput = false;
-
-            
 
         } //END Options
 
