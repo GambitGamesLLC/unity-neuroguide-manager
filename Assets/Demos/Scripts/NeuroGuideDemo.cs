@@ -18,11 +18,11 @@ public class NeuroGuideDemo : MonoBehaviour
             (NeuroGuideManager.NeuroGuideSystem system) => {
                 Debug.Log("NeuroGuideDemo Start() Successfully created NeuroGuideManager and recieved system object");
 
+                /*
                 Debug.Log( "sensorID: " + system.data[ 0 ].sensorID + "\n" +
                             "currentValue : " + system.data[ 0 ].currentValue + "\n" +
-                            "currentNormalizedValue : " + system.data[ 0 ].currentNormalizedValue + "\n" +
-                            "rawData[0] : " + system.data[ 0 ].rawData[0]
-                    );
+                            "currentNormalizedValue : " + system.data[ 0 ].currentNormalizedValue );
+                */
             }, 
             (string error) =>{
                 Debug.LogError( error );            

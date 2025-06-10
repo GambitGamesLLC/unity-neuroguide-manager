@@ -112,26 +112,6 @@ namespace gambit.neuroguide
             /// <summary>
             /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
             /// </summary>
-            public int debugMinRawDataPoints = 5;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
-            /// </summary>
-            public int debugMaxRawDataPoints = 15;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
-            /// </summary>
-            public float debugMinRawDataValue = -100.0f;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
-            /// </summary>
-            public float debugMaxRawDataValue = 100.0f;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
-            /// </summary>
             public float debugMinCurrentValue = 0.0f;
 
             /// <summary>
@@ -142,7 +122,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// How long should it take for our debug keyboard input tweens to reach the max or min value?
             /// </summary>
-            public float debugTweenDuration = 20f;
+            public float debugTweenDuration = 5f;
 
 #if EXT_DOTWEEN
             /// <summary>
@@ -320,9 +300,14 @@ namespace gambit.neuroguide
 
                     NeuroGuideData data = go.AddComponent<NeuroGuideData>();
                     data.sensorID = go.name;
-                    data.rawData = GenerateRandomFloatList( system.random, system.options.debugMinRawDataPoints, system.options.debugMaxRawDataPoints, system.options.debugMinRawDataValue, system.options.debugMaxRawDataValue );
                     data.currentValue = GenerateRandomFloat( system.random, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue );
                     data.currentNormalizedValue = GenerateRandomFloat( system.random, 0.0f, 1.0f ); // Normalized value typically 0-1
+
+#if EXT_DOTWEEN
+                    // Store the original values for tweening back
+                    data.originalValue = data.currentValue;
+                    data.originalNormalizedValue = data.currentNormalizedValue;
+#endif
 
                     system.data.Add( data );
                 }
@@ -353,29 +338,6 @@ namespace gambit.neuroguide
             return result.ToString();
 
         } //END GenerateRandomSensorID Method
-
-        /// <summary>
-        /// Helper function to generate a list of random floats for rawData
-        /// </summary>
-        /// <param name="random">Instance of System.Random</param>
-        /// <param name="minCount"></param>
-        /// <param name="maxCount"></param>
-        /// <param name="minValue"></param>
-        /// <param name="maxValue"></param>
-        /// <returns></returns>
-        //-------------------------------------------------------------------//
-        private static List<float> GenerateRandomFloatList( System.Random random, int minCount, int maxCount, float minValue, float maxValue )
-        //-------------------------------------------------------------------//
-        {
-            int count = random.Next( minCount, maxCount + 1 ); // Next is exclusive for max
-            List<float> floatList = new List<float>( count );
-            for(int i = 0; i < count; i++)
-            {
-                floatList.Add( (float)(random.NextDouble() * (maxValue - minValue) + minValue) );
-            }
-            return floatList;
-
-        } //END GenerateRandomFloatList Method
 
         /// <summary>
         /// Helper function to generate a single random float
@@ -440,7 +402,13 @@ namespace gambit.neuroguide
                 return;
             }
 
+#if EXT_DOTWEEN
+#if UNITY_INPUT
             HandleDebugInput();
+#else
+            HandleLegacyDebugInput();
+#endif
+#endif
 
         } //END Update Method
 
@@ -455,37 +423,151 @@ namespace gambit.neuroguide
         public void HandleDebugInput()
         //---------------------------------------//
         {
-            bool up_keyUp = false;
-#if UNITY_INPUT
-            up_keyUp = true;
-#else
-            up_keyUp = Input.GetKeyUp( KeyCode.UpArrow );
-#endif
-            if( up_keyUp )
-            {
-                for( int i = 0; i < system.data.Count; i++ )
-                {
-                    // Kill any existing tween on this specific data value to ensure smooth transition.
-                    if(system.data[ i ].activeTween != null && system.data[ i ].activeTween.IsActive())
-                    {
-                        system.data[ i ].activeTween.Kill(false); // false: don't complete the tween, just stop it.
-                    }
 
-                    //Create the tween
-                    //Gemini - Error occurs on the next line!
-                    system.data[ i ].activeTween = DOTween.To(
-                        getter: () => system.data[ i ].currentValue,
-                        setter: ( x ) => system.data[ i ].currentValue = x,
-                        endValue: system.options.debugMaxCurrentValue,
-                        duration: system.options.debugTweenDuration )
-                    .SetEase( system.options.debugEaseType )
-                    .OnComplete( () => { system.data[ i ].activeTween = null; } );
-                }
+#if UNITY_INPUT
+            
+            // --- UP ARROW ---
+            if(Keyboard.current.upArrowKey.wasPressedThisFrame)
+            {
+                TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
             }
+
+            if(Keyboard.current.upArrowKey.wasReleasedThisFrame)
+            {
+                TweenAllValuesToOriginal();
+            }
+
+            // --- DOWN ARROW ---
+            if(Keyboard.current.downArrowKey.wasPressedThisFrame)
+            {
+                TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
+            }
+
+            if(Keyboard.current.downArrowKey.wasReleasedThisFrame)
+            {
+                TweenAllValuesToOriginal();
+            }
+#endif
 
         } //END HandleDebugInput Method
 
+        #endregion
+
+        #region PRIVATE - HANDLE DEBUG INPUT - LEGACY
+
+        /// <summary>
+        /// Handles keyboard input for debug tweening when debug mode is active.
+        /// </summary>
+        //---------------------------------------//
+        public void HandleLegacyDebugInput()
+        //---------------------------------------//
+        {
+
+#if !UNITY_INPUT
+            // --- UP ARROW ---
+            if(Input.GetKeyDown( KeyCode.UpArrow ))
+            {
+                TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
+            }
+
+            if(Input.GetKeyUp( KeyCode.UpArrow ))
+            {
+                TweenAllValuesToOriginal();
+            }
+
+            // --- DOWN ARROW ---
+            if(Input.GetKeyDown( KeyCode.DownArrow ))
+            {
+                TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
+            }
+
+            if(Input.GetKeyUp( KeyCode.DownArrow ))
+            {
+                TweenAllValuesToOriginal();
+            }
+#endif
+
+        } //END HandleLegacyDebugInput Method
+
 #endregion
+
+        #region PRIVATE - TWEEN VALUES
+
+        /// <summary>
+        /// Tweens all data values to a target value.
+        /// </summary>
+        //------------------------------------------------------------------------------------//
+        private void TweenAllValues( float targetValue, float targetNormalizedValue )
+        //------------------------------------------------------------------------------------//
+        {
+            for(int i = 0; i < system.data.Count; i++)
+            {
+                // Capture the index in a local variable to avoid closure issues.
+                int index = i;
+
+                // Kill any existing tween on this data item.
+                if(system.data[ index ].activeTween != null && system.data[ index ].activeTween.IsActive())
+                {
+                    system.data[ index ].activeTween.Kill( false );
+                }
+
+                // Tween currentValue
+                system.data[ index ].activeTween = DOTween.To(
+                    () => system.data[ index ].currentValue,
+                    x => system.data[ index ].currentValue = x,
+                    targetValue,
+                    system.options.debugTweenDuration
+                ).SetEase( system.options.debugEaseType )
+                 .OnComplete( () => system.data[ index ].activeTween = null );
+
+                // Tween currentNormalizedValue
+                DOTween.To(
+                    () => system.data[ index ].currentNormalizedValue,
+                    x => system.data[ index ].currentNormalizedValue = x,
+                    targetNormalizedValue,
+                    system.options.debugTweenDuration
+                ).SetEase( system.options.debugEaseType );
+            }
+
+        } //END TweenAllValues
+
+        /// <summary>
+        /// Tweens all data values back to their original state.
+        /// </summary>
+        //----------------------------------------------------------//
+        private void TweenAllValuesToOriginal()
+        //----------------------------------------------------------//
+        {
+            for(int i = 0; i < system.data.Count; i++)
+            {
+                int index = i;
+
+                if(system.data[ index ].activeTween != null && system.data[ index ].activeTween.IsActive())
+                {
+                    system.data[ index ].activeTween.Kill( false );
+                }
+
+                // Tween back to originalValue
+                system.data[ index ].activeTween = DOTween.To(
+                    () => system.data[ index ].currentValue,
+                    x => system.data[ index ].currentValue = x,
+                    system.data[ index ].originalValue,
+                    system.options.debugTweenDuration
+                ).SetEase( system.options.debugEaseType )
+                 .OnComplete( () => system.data[ index ].activeTween = null );
+
+                // Tween back to originalNormalizedValue
+                DOTween.To(
+                    () => system.data[ index ].currentNormalizedValue,
+                    x => system.data[ index ].currentNormalizedValue = x,
+                    system.data[ index ].originalNormalizedValue,
+                    system.options.debugTweenDuration
+                ).SetEase( system.options.debugEaseType );
+            }
+
+        } //END TweenAllValuesToOriginal
+
+        #endregion
 
     } //END NeuroGuideManager Class
 

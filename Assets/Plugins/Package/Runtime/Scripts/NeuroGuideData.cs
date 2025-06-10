@@ -19,11 +19,6 @@ namespace gambit.neuroguide
         public string sensorID;
 
         /// <summary>
-        /// List of raw data from the sensor
-        /// </summary>
-        public List<float> rawData;
-
-        /// <summary>
         /// The current value from the sensor, not normalized
         /// </summary>
         public float currentValue = 0f;
@@ -34,6 +29,16 @@ namespace gambit.neuroguide
         public float currentNormalizedValue = 0f;
 
 #if EXT_DOTWEEN
+        /// <summary>
+        /// The original value of the data, used to tween back to this value
+        /// </summary>
+        public float originalValue = 0f;
+
+        /// <summary>
+        /// The original normalized value of the data, used to tween back to this value
+        /// </summary>
+        public float originalNormalizedValue = 0f;
+
         /// <summary>
         /// Used to tween the data
         /// </summary>
