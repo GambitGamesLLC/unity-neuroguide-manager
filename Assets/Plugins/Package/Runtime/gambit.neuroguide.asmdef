@@ -3,9 +3,7 @@
     "rootNamespace": "",
     "references": [
         "gambit.singleton",
-        "gambit.staticcoroutine",
         "DOTween.Modules",
-        "gambit.mathhelper",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],
@@ -22,19 +20,9 @@
             "define": "GAMBIT_SINGLETON"
         },
         {
-            "name": "com.gambit.staticcoroutine",
-            "expression": "",
-            "define": "GAMBIT_STATIC_COROUTINE"
-        },
-        {
             "name": "com.demigiant.dotween",
             "expression": "",
             "define": "EXT_DOTWEEN "
-        },
-        {
-            "name": "com.gambit.mathhelper",
-            "expression": "",
-            "define": "GAMBIT_MATHHELPER"
         },
         {
             "name": "com.unity.inputsystem",

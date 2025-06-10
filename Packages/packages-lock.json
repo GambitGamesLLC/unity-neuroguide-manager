@@ -7,13 +7,6 @@
       "dependencies": {},
       "hash": "7fcd6b1e76ae6ab331438705fb4a4a71f2fa4e23"
     },
-    "com.gambit.mathhelper": {
-      "version": "https://github.com/GambitGamesLLC/unity-math-helper.git?path=Assets/Plugins/Package",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "eaf40b1333816d811cb331c9b496724b733585a5"
-    },
     "com.gambit.singleton": {
       "version": "https://github.com/GambitGamesLLC/unity-singleton.git?path=Assets/Plugins/Package",
       "depth": 0,

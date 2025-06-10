@@ -3,7 +3,6 @@
     "com.gambit.staticcoroutine": "https://github.com/GambitGamesLLC/unity-static-Coroutine.git?path=Assets/Plugins/Package",
     "com.gambit.singleton": "https://github.com/GambitGamesLLC/unity-singleton.git?path=Assets/Plugins/Package",
     "com.demigiant.dotween": "https://github.com/GambitGamesLLC/unity-plugin-dotween.git?path=Assets/Plugins/Package",
-    "com.gambit.mathhelper": "https://github.com/GambitGamesLLC/unity-math-helper.git?path=Assets/Plugins/Package",
     "com.unity.collab-proxy": "2.8.2",
     "com.unity.ide.rider": "3.0.36",
     "com.unity.ide.visualstudio": "2.0.23",

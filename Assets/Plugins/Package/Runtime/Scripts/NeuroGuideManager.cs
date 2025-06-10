@@ -40,27 +40,15 @@ public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
 } //END Singleton<T> class
 #endif
 
-#if GAMBIT_STATICCOROUTINE
-using gambit.staticcoroutine;
-#endif
-
-#if GAMBIT_MATHHELPER
-using gambit.mathhelper;
-#endif
-
 #if EXT_DOTWEEN
 using DG.Tweening;
 #endif
 
-
 using System;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
 using System.Text;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 #if UNITY_INPUT
 using UnityEngine.InputSystem;
@@ -110,12 +98,12 @@ namespace gambit.neuroguide
             public int debugNumberOfEntries = 100;
 
             /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
+            /// If 'enableDebugData' is true, we will use this 'minimum' value as the lowest value we tween to when holding the 'Down' arrow key
             /// </summary>
             public float debugMinCurrentValue = 0.0f;
 
             /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
+            /// If 'enableDebugData' is true, we will use this 'max' value as the highest value we tween to when holding the 'Up' arrow key
             /// </summary>
             public float debugMaxCurrentValue = 50.0f;
 
@@ -179,6 +167,16 @@ namespace gambit.neuroguide
             // can lead to identical sequences if seeded by the system clock too quickly.
             public System.Random random = new System.Random();
 
+            /// <summary>
+            /// Unity action to call when data has been updated
+            /// </summary>
+            public Action OnDataUpdate;
+
+            /// <summary>
+            /// Unity action to call when the hardware state has changed
+            /// </summary>
+            public Action<State> OnStateUpdate;
+
         } //END NeuroGuideSystem
         #endregion
 
@@ -194,7 +192,9 @@ namespace gambit.neuroguide
         public static async void Create(
             Options options = null,
             Action<NeuroGuideSystem> OnSuccess = null,
-            Action<string> OnFailed = null )
+            Action<string> OnFailed = null,
+            Action OnDataUpdated = null,
+            Action<State> OnStateUpdated = null)
         //-------------------------------------//
         {
             if( system != null )
@@ -203,10 +203,6 @@ namespace gambit.neuroguide
                 return;
             }
 
-#if !GAMBIT_STATIC_COROUTINE
-            OnFailed?.Invoke("NeuroGuideManager.cs Create() missing 'GAMBIT_STATIC_COROUTINE' scripting define symbol or package. This is used to asynchronously connect to the NeuroGear hardware. Unable to continue.");
-            return;
-#endif
 
             //If the user didn't pass in any options, use the defaults
             if( options == null ) options = new Options();
@@ -223,11 +219,11 @@ namespace gambit.neuroguide
             //Generate a NeuroGuideSystem object
             system = new NeuroGuideSystem();
             system.options = options;
+            system.OnDataUpdate = OnDataUpdated;
+            system.OnStateUpdate = OnStateUpdated;
 
             //Connect to the NeuroGuide hardware to make sure we can see it
-#if GAMBIT_STATIC_COROUTINE
             await CheckConnection();
-#endif
 
             //If we were unable to make a connection to the NeuroGear hardware, we cannot continue
             if(system.state == State.NotInitialized)
@@ -265,6 +261,8 @@ namespace gambit.neuroguide
 
             //Since we don't know anything about the NeuroGear, let's just say we're connected
             system.state = State.Initialized;
+
+            SendStateUpdatedMessage();
 
         } //END CheckConnection Method
 
@@ -366,7 +364,7 @@ namespace gambit.neuroguide
         //----------------------------------------//
         {
 #if EXT_DOTWEEN
-            DOTween.Init( true, false, LogBehaviour.Verbose );
+            DOTween.Init( false, false, LogBehaviour.Verbose );
 #endif
         } //END Awake
 
@@ -408,6 +406,8 @@ namespace gambit.neuroguide
 #else
             HandleLegacyDebugInput();
 #endif
+
+            SendDataUpdatedMessage();
 #endif
 
         } //END Update Method
@@ -566,6 +566,106 @@ namespace gambit.neuroguide
             }
 
         } //END TweenAllValuesToOriginal
+
+        #endregion
+
+        #region PRIVATE - SEND DATA UPDATED MESSAGE
+
+        /// <summary>
+        /// Sends a message out to any listeners via the Unity Action<> system
+        /// </summary>
+        //---------------------------------------------------//
+        private static void SendDataUpdatedMessage()
+        //---------------------------------------------------//
+        {
+            if(system == null)
+            {
+                return;
+            }
+
+            system.OnDataUpdate?.Invoke();
+
+        } //END SendDataUpdatedMessage Method
+
+        #endregion
+
+        #region PRIVATE - SEND STATE CHANGED MESSAGE
+
+        /// <summary>
+        /// Sends a message out to any listeners via the Unity Action<> system
+        /// </summary>
+        //---------------------------------------------------//
+        private static void SendStateUpdatedMessage()
+        //---------------------------------------------------//
+        {
+            if(system == null)
+            {
+                return;
+            }
+
+            system.OnStateUpdate?.Invoke(system.state);
+
+        } //END SendDataUpdatedMessage Method
+
+        #endregion
+
+        #region PUBLIC - DESTROY
+
+        /// <summary>
+        /// Stops listening to input and prepare the manager to have Create() called again
+        /// </summary>
+        //-------------------------------//
+        public static void Destroy()
+        //-------------------------------//
+        {
+
+            if(system == null)
+            {
+                return;
+            }
+
+            if(system.data == null || (system.data != null && system.data.Count == 0))
+            {
+                return;
+            }
+
+            for( int i = 0; i < system.data.Count; i++ )
+            {
+#if EXT_DOTWEEN
+                DOTween.Kill( system.data[i].gameObject );
+#endif
+            }
+
+            Instance.Invoke( "FinishDestroy", .1f );
+
+        } //END Destroy Method
+
+        /// <summary>
+        /// Invoked by Destroy(), after allowing for tweens to be cleaned up, destroys the gameobjects
+        /// </summary>
+        //------------------------------------//
+        private void FinishDestroy()
+        //------------------------------------//
+        {
+            if(system.options.showDebugLogs)
+            {
+                Debug.Log( "NeuroGuideManager.cs FinishDestroy() cleaned up objects and data, ready to Create()" );
+            }
+
+            if(system != null && system.data.Count > 0)
+            {
+                for(int i = 0; i < system.data.Count; i++)
+                {
+                    if(system.data[ i ].gameObject != null)
+                    {
+                        Destroy( system.data[ i ].gameObject );
+                    }
+                }
+            }
+            
+            system = null;
+
+        } //END FinishDestroy
 
         #endregion
 
