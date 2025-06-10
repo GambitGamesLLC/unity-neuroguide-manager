@@ -5,7 +5,8 @@
         "gambit.singleton",
         "gambit.staticcoroutine",
         "DOTween.Modules",
-        "gambit.mathhelper"
+        "gambit.mathhelper",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -34,6 +35,11 @@
             "name": "com.gambit.mathhelper",
             "expression": "",
             "define": "GAMBIT_MATHHELPER"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "UNITY_INPUT"
         }
     ],
     "noEngineReferences": false

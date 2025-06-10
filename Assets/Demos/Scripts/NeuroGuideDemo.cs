@@ -13,13 +13,19 @@ public class NeuroGuideDemo : MonoBehaviour
             new NeuroGuideManager.Options()
             {
                 showDebugLogs = true,
-                enableDebugKeyboardInput = true
+                enableDebugData = true
             }, 
             (NeuroGuideManager.NeuroGuideSystem system) => {
-                Debug.Log("NeuroGuideDemo Start() Successfully created NeuroGuideManager and recieved system object"); 
+                Debug.Log("NeuroGuideDemo Start() Successfully created NeuroGuideManager and recieved system object");
+
+                Debug.Log( "sensorID: " + system.data[ 0 ].sensorID + "\n" +
+                            "currentValue : " + system.data[ 0 ].currentValue + "\n" +
+                            "currentNormalizedValue : " + system.data[ 0 ].currentNormalizedValue + "\n" +
+                            "rawData[0] : " + system.data[ 0 ].rawData[0]
+                    );
             }, 
             (string error) =>{
-                Debug.LogError( "NeuroGuideDemo Start() Failed to create NeuroGuideManager ... error = " + error);            
+                Debug.LogError( error );            
             });
     }
 
