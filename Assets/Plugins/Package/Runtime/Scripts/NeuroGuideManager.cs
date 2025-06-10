@@ -394,6 +394,22 @@ namespace gambit.neuroguide
 
         #endregion
 
+        #region PUBLIC - AWAKE
+
+        /// <summary>
+        /// Unity lifecycle method
+        /// </summary>
+        //----------------------------------------//
+        public void Start()
+        //----------------------------------------//
+        {
+#if EXT_DOTWEEN
+            DOTween.Init( true, false, LogBehaviour.Verbose );
+#endif
+        } //END Awake
+
+#endregion
+
         #region PUBLIC - UPDATE
 
         /// <summary>
@@ -456,14 +472,14 @@ namespace gambit.neuroguide
                     }
 
                     //Create the tween
+                    //Gemini - Error occurs on the next line!
                     system.data[ i ].activeTween = DOTween.To(
                         getter: () => system.data[ i ].currentValue,
                         setter: ( x ) => system.data[ i ].currentValue = x,
                         endValue: system.options.debugMaxCurrentValue,
                         duration: system.options.debugTweenDuration )
                     .SetEase( system.options.debugEaseType )
-                    .OnComplete( () => system.data[ i ].activeTween = null );
-                    
+                    .OnComplete( () => { system.data[ i ].activeTween = null; } );
                 }
             }
 
