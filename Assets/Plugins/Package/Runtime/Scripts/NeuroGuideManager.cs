@@ -118,6 +118,11 @@ namespace gambit.neuroguide
             public int debugNumberOfEntries = 100;
 
             /// <summary>
+            /// If 'enabledDebugData' is true, we check this flag to see if we should randomize the starting values of the NeuroGuideData, if disabled the NeuroGuideData values are zero at start
+            /// </summary>
+            public bool debugRandomizeStartingValues = true;
+
+            /// <summary>
             /// If 'enableDebugData' is true, we will use this 'minimum' value as the lowest value we tween to when holding the 'Down' arrow key
             /// </summary>
             public float debugMinCurrentValue = 0.0f;
@@ -136,7 +141,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// What is the tweening type our debug functionality should use to change values over time?
             /// </summary>
-            public DG.Tweening.Ease debugEaseType = Ease.InOutExpo;
+            public Ease debugEaseType = Ease.InOutExpo;
 #endif
 
         } //END Options
@@ -318,8 +323,17 @@ namespace gambit.neuroguide
 
                     NeuroGuideData data = go.AddComponent<NeuroGuideData>();
                     data.sensorID = go.name;
-                    data.currentValue = GenerateRandomFloat( system.random, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue );
-                    data.currentNormalizedValue = GenerateRandomFloat( system.random, 0.0f, 1.0f ); // Normalized value typically 0-1
+
+                    if(system.options.debugRandomizeStartingValues)
+                    {
+                        data.currentValue = GenerateRandomFloat( system.random, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue );
+                        data.currentNormalizedValue = GenerateRandomFloat( system.random, 0.0f, 1.0f ); // Normalized value typically 0-1
+                    }
+                    else
+                    {
+                        data.currentValue = 0f;
+                        data.currentNormalizedValue = 0f;
+                    }
 
 #if EXT_DOTWEEN
                     // Store the original values for tweening back

@@ -31,15 +31,47 @@ namespace gambit.neuroguide
 
     private GameObject cubeParent;
 
-    public bool logs = true;
-    public bool debug = true;
-    public int entries = 1;
-    public int min = -5;
-    public int max = 5;
+        /// <summary>
+        /// Should we enable the NeuroGuideManager debug logs?
+        /// </summary>
+        public bool logs = true;
+
+        /// <summary>
+        /// Should we enable the debug system for the NeuroGear hardware? This will enable keyboard events to control simulated NeuroGear hardware data spawned during the Create() method of NeuroGuideManager.cs
+        /// </summary>
+        public bool debug = true;
+
+        /// <summary>
+        /// How many cubes should we spawn? Each cube will be tied to a NeuroGuideData object
+        /// </summary>
+        public int entries = 1;
+
+        /// <summary>
+        /// What is the min value we should use for the local position possible to reach by the cube movement?
+        /// </summary>
+        public int min = -5;
+
+        /// <summary>
+        /// What is the max value we should use for the local position possible to reach by the cube movement?
+        /// </summary>
+        public int max = 5;
+
 #if EXT_DOTWEEN
-    public Ease ease = Ease.OutBounce;
+        /// <summary>
+        /// What tween easing should we use?
+        /// </summary>
+        public Ease ease = Ease.OutBounce;
 #endif
-    public int duration = 2;
+
+        /// <summary>
+        /// How long should our tweens take?
+        /// </summary>
+        public int duration = 2;
+
+        /// <summary>
+        /// Should the starting value of our NeuroGuideData be randomized?
+        /// </summary>
+        public bool randomizeStartValue = true;
 
     #endregion
 
@@ -117,7 +149,8 @@ namespace gambit.neuroguide
 #if EXT_DOTWEEN
                 debugEaseType = ease,
 #endif
-                debugTweenDuration = duration
+                debugTweenDuration = duration,
+                debugRandomizeStartingValues = randomizeStartValue
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
                 Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
