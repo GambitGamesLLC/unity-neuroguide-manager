@@ -124,13 +124,13 @@ You can customize the manager's behavior by passing an `Options` object during c
 This package relies on other open-source packages to function correctly.
 
   * **Gambit Singleton** (Optional) [[Repo]](https://github.com/GambitGamesLLC/unity-singleton)  
-    Used as the base pattern for `NeuroGuideManager.Instance`. If not included we utilize a built in alternative, but we recommend this package in any project using Singletons to keep this common code to one location.
+    If 'GAMBIT_SINGLETON' scripting define symbol is present. Used as the base pattern for `NeuroGuideManager.Instance`. If not included we utilize a built in alternative, but we recommend this package in any project using Singletons to keep this common code to one location.
 
   * **Unity Input** (Optional) [[Docs]](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/index.html)  
-    If 'UNITY_INPUT' scripting define symbol is present in your project, we will use the new input system for simulating hardware via keyboard input when the appropriate debug option is enabled during Create(). If the 'UNITY_INPUT' scripting define symbol is not set, we will use the Legacy Input System.
+    If 'UNITY_INPUT' scripting define symbol is present. Uses the new input system for simulating hardware via keyboard input when the appropriate debug option is enabled during Create(). If the 'UNITY_INPUT' scripting define symbol is not set, we will use the Legacy Input System.
 
   * **DOTween Plugin** (Optional) [[Asset Store]](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-plugin-dotween)  
-    Used for animating debug data streams when simulating headset input. Set the `enableDebugData` Option variable to true and use the keyboard to set the simulated hardware values.
+    If 'EXT_DOTWEEN' scripting define symbol is present. We use DOTween for animating debug data streams when simulating headset input. Set the `enableDebugData` Option variable to true and use the keyboard to set the simulated hardware values.
 
 -----
 
