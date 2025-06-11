@@ -10,6 +10,22 @@ Handles connectivity and data interaction with the NeuroGuide neuromodulation he
 
 -----
 
+## DEMO INSTRUCTIONS
+A quick demo scene to see how the NeuroGuide hardware and our manager works. Spawns cubes based on debug values set in the demo scene that follow the NeuroGear hardware values as they are read. If no NeuroGear is present, you can control the cubes using the Keyboard arrow keys.
+
+- Open the Unity Project in the editor on a PC with a keyboard attached.
+- Open Assets/Demos/Demo.unity scene
+- Look at the Demo GameObject and its values in the scene inspector, make sure the `debug` variable is enabled if you want to test without the NeuroGuide hardware
+- Play the scene
+
+## CONTROLS
+- `Enter Key` - Creates a NeuroGuideSystem and spawns cubes to match the data
+- `Delete Key` - Destroys the NeuroGuideSystem and any spawned cubes, afterwards the `Enter` key can be pressed again to spawn a new NeuroGuideSystem
+- `Up Key` - Tweens the debug value of each NeuroGuideData node to the max value, set by the public value in the NeuroGuideDemo component on the Demo GameObject
+- `Down Key` - Tweens the debug value of each NeuroGuideData node to the minimum value, set by the public value in the NeuroGuideDemo component on the Demo GameObject
+
+-----
+
 ## INSTALLATION INSTRUCTIONS
 
 ### Method 1: Unity Package Manager (via Git URL)
