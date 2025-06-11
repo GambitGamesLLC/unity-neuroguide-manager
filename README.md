@@ -112,11 +112,12 @@ You can customize the manager's behavior by passing an `Options` object during c
   * `showDebugLogs`: (bool) Enables or disables internal state logs in the Unity console.
   * `enableDebugData`: (bool) Enables simulated data for testing without a headset. Allows keyboard input (Up/Down arrows) to control debug values.
   * `debugNumberOfEntries`: (int) If debug data is enabled, this is the number of randomized data nodes to generate.
+  * `debugRandomizeStartingValues`: (bool) If enabled, randomizes the start value between the 'min' and 'max' value, if disabled the starting value is 0.
   * `debugMinCurrentValue`: (float) The minimum value for debug data tweens.
   * `debugMaxCurrentValue`: (float) The maximum value for debug data tweens.
   * `debugTweenDuration`: (float) The duration (in seconds) for the debug value tweens.
   * `debugEaseType`: (DG.Tweening.Ease) The DOTween ease type to use for debug animations (requires DOTween).
-
+    
 -----
 
 ## DEPENDENCIES
