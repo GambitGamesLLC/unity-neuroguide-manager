@@ -1,16 +1,48 @@
-using UnityEngine;
+
+namespace gambit.neuroguide
+{
+
+    #region IMPORTS
 
 #if UNITY_INPUT
-using UnityEngine.InputSystem;
+    using UnityEngine.InputSystem;
 #endif
 
 #if GAMBIT_NEUROGUIDE
-using gambit.neuroguide;
+    using gambit.neuroguide;
 #endif
 
-public class NeuroGuideDemo : MonoBehaviour
+
+#if EXT_DOTWEEN
+    using DG.Tweening;
+#endif
+
+    using UnityEngine;
+
+    #endregion
+
+    /// <summary>
+    /// Spawns cubes to test the NeuroGear hardware package. Press Enter to spawn, Delete to destroy, and Up and Down keys to test
+    /// </summary>
+    public class NeuroGuideDemo : MonoBehaviour
 {
-    
+
+    #region PRIVATE - VARIABLES
+
+    private GameObject cubeParent;
+
+    public bool logs = true;
+    public bool debug = true;
+    public int entries = 1;
+    public int min = -5;
+    public int max = 5;
+#if EXT_DOTWEEN
+    public Ease ease = Ease.OutBounce;
+#endif
+    public int duration = 2;
+
+    #endregion
+
     #region PUBLIC - START
 
     /// <summary>
@@ -20,7 +52,7 @@ public class NeuroGuideDemo : MonoBehaviour
     public void Start()
     //----------------------------------//
     {
-        
+        cubeParent = gameObject;
 
     } //END Start Method
 
@@ -43,7 +75,7 @@ public class NeuroGuideDemo : MonoBehaviour
 
     #endregion
 
-    #region CREATE ON ENTER KEY PRESSED
+    #region PRIVATE - CREATE ON ENTER KEY PRESSED
 
     /// <summary>
     /// Creates the NeuroGuideManager instance when the enter key is pressed
@@ -77,35 +109,60 @@ public class NeuroGuideDemo : MonoBehaviour
         NeuroGuideManager.Create(
             new NeuroGuideManager.Options()
             {
-                showDebugLogs = true,
-                enableDebugData = true
+                showDebugLogs = logs,
+                enableDebugData = debug,
+                debugNumberOfEntries = entries,
+                debugMinCurrentValue = min,
+                debugMaxCurrentValue = max,
+#if EXT_DOTWEEN
+                debugEaseType = ease,
+#endif
+                debugTweenDuration = duration
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
-                Debug.Log( "NeuroGuideDemo CreateNeuroGearManager() Successfully created NeuroGuideManager and recieved system object" );
+                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGearManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
 
-                /*
-                Debug.Log( "sensorID: " + system.data[ 0 ].sensorID + "\n" +
-                            "currentValue : " + system.data[ 0 ].currentValue + "\n" +
-                            "currentNormalizedValue : " + system.data[ 0 ].currentNormalizedValue );
-                */
+                //Spawn cubes to match the system data
+                for(int i = 0; i < system.data.Count; i++)
+                {
+                    GameObject go = GameObject.CreatePrimitive( PrimitiveType.Cube );
+                    go.name = "Cube: " + system.data[i].name;
+                    go.transform.parent = cubeParent.transform;
+                    go.transform.localPosition = new Vector3( system.data[i].currentValue, 0, 0 );
+                }
+                
             },
             ( string error ) => {
                 Debug.LogWarning( error );
             },
-            () =>
+            (NeuroGuideManager.NeuroGuideSystem system) =>
             {
-                Debug.Log( "NeuroGuideDemo CreateNeuroGearManager() Data Updated" );
+                //Debug.Log( "NeuroGuideDemo CreateNeuroGearManager() Data Updated" );
+
+                if(system != null && system.data != null && system.data.Count > 0)
+                {
+                    for(int i = 0; i < system.data.Count; i++)
+                    {
+                        GameObject go = GameObject.Find( "Cube: " + system.data[ i ].name );
+
+                        if(go != null)
+                        {
+                            go.transform.localPosition = new Vector3( system.data[ i ].currentValue, 0, 0 );
+                        }
+                    }
+                }
+                
             },
-            ( NeuroGuideManager.State state ) =>
+        ( NeuroGuideManager.NeuroGuideSystem system, NeuroGuideManager.State state ) =>
             {
-                Debug.Log( "NeuroGuideDemo CreateNeuroGearManager() State changed to " + state.ToString() );
+                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGearManager() State changed to " + state.ToString() );
             } );
 
     } //END CreateNeuroGearManager Method
 
-    #endregion
+#endregion
 
-    #region DESTROY ON DELETE KEY PRESSED
+    #region PRIVATE - DESTROY ON DELETE KEY PRESSED
 
     /// <summary>
     /// Destroy the NeuroGuideManager instance
@@ -118,18 +175,37 @@ public class NeuroGuideDemo : MonoBehaviour
 #if UNITY_INPUT
         if(Keyboard.current.deleteKey.wasPressedThisFrame)
         {
+            DestroyCubes();
             NeuroGuideManager.Destroy();
         }
 #else
         if( Input.GetKeyUp( KeyCode.Delete ) )
         {
+            DestroyCubes();
             NeuroGuideManager.Destroy();
         }
 #endif
 
     } //END DestroyOnDelete
 
+    //-------------------------------//
+    private void DestroyCubes()
+    //-------------------------------//
+    {
+
+        if(NeuroGuideManager.system != null && NeuroGuideManager.system.data.Count > 0)
+        {
+            for(int i = 0; i < NeuroGuideManager.system.data.Count; i++)
+            {
+                GameObject go = GameObject.Find( "Cube: " + NeuroGuideManager.system.data[ i ].name );
+                Destroy( go );
+            }
+        }
+
+    } //END DestroyCubes
+
     #endregion
 
+} //END NeuroGuideDemo Class
 
-} //END Class
+} //END gambit.neuroguide Namespace

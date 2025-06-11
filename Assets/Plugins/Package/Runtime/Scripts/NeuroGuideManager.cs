@@ -73,6 +73,26 @@ namespace gambit.neuroguide
 
         #endregion
 
+        #region PRIVATE - VARIABLES
+
+        /// <summary>
+        /// Flag for if we've finished a debug keyboard tween, so the timer to change to the 'No Data' incoming state should be activated
+        /// </summary>
+        private static bool debugNoDataTimerActive = false;
+
+        /// <summary>
+        /// How long we want to wait after a debug keyboard tween completes before we switch states to simulate a lack of data being sent by the NeuroGear hardware
+        /// </summary>
+        private static float debugNoDataTimerLength = 4f;
+
+        /// <summary>
+        /// How much time remains in the No Data Timer?
+        /// </summary>
+        private static float debugNoDataTimerCurrentValue = 0f;
+        
+
+        #endregion
+
         #region PUBLIC - CREATION OPTIONS
 
         /// <summary>
@@ -170,12 +190,12 @@ namespace gambit.neuroguide
             /// <summary>
             /// Unity action to call when data has been updated
             /// </summary>
-            public Action OnDataUpdate;
+            public Action<NeuroGuideSystem> OnDataUpdate;
 
             /// <summary>
             /// Unity action to call when the hardware state has changed
             /// </summary>
-            public Action<State> OnStateUpdate;
+            public Action<NeuroGuideSystem, State> OnStateUpdate;
 
         } //END NeuroGuideSystem
         #endregion
@@ -192,9 +212,9 @@ namespace gambit.neuroguide
         public static async void Create(
             Options options = null,
             Action<NeuroGuideSystem> OnSuccess = null,
-            Action<string> OnFailed = null,
-            Action OnDataUpdated = null,
-            Action<State> OnStateUpdated = null)
+            Action< string> OnFailed = null,
+            Action<NeuroGuideSystem> OnDataUpdated = null,
+            Action<NeuroGuideSystem, State> OnStateUpdated = null)
         //-------------------------------------//
         {
             if( system != null )
@@ -211,7 +231,7 @@ namespace gambit.neuroguide
 #if !EXT_DOTWEEN
             if( options.enableDebugKeyboardInput )
             {
-                OnFailed?.Invoke("NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGear values using the keyboard input. Unable to continue.");
+                OnFailed?.Invoke( "NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGear values using the keyboard input. Unable to continue.");
                 return;
             }
 #endif
@@ -354,7 +374,7 @@ namespace gambit.neuroguide
 
         #endregion
 
-        #region PUBLIC - AWAKE
+        #region PUBLIC - START
 
         /// <summary>
         /// Unity lifecycle method
@@ -366,7 +386,7 @@ namespace gambit.neuroguide
 #if EXT_DOTWEEN
             DOTween.Init( false, false, LogBehaviour.Verbose );
 #endif
-        } //END Awake
+        } //END Start
 
 #endregion
 
@@ -407,8 +427,9 @@ namespace gambit.neuroguide
             HandleLegacyDebugInput();
 #endif
 
-            SendDataUpdatedMessage();
 #endif
+
+            HandleDebugNoDataTimer();
 
         } //END Update Method
 
@@ -429,22 +450,50 @@ namespace gambit.neuroguide
             // --- UP ARROW ---
             if(Keyboard.current.upArrowKey.wasPressedThisFrame)
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
             }
 
             if(Keyboard.current.upArrowKey.wasReleasedThisFrame)
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValuesToOriginal();
             }
 
             // --- DOWN ARROW ---
             if(Keyboard.current.downArrowKey.wasPressedThisFrame)
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
             }
 
             if(Keyboard.current.downArrowKey.wasReleasedThisFrame)
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValuesToOriginal();
             }
 #endif
@@ -467,29 +516,57 @@ namespace gambit.neuroguide
             // --- UP ARROW ---
             if(Input.GetKeyDown( KeyCode.UpArrow ))
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
             }
 
             if(Input.GetKeyUp( KeyCode.UpArrow ))
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValuesToOriginal();
             }
 
             // --- DOWN ARROW ---
             if(Input.GetKeyDown( KeyCode.DownArrow ))
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
             }
 
             if(Input.GetKeyUp( KeyCode.DownArrow ))
             {
+                if(system.state != State.ReceivingData)
+                {
+                    system.state = State.ReceivingData;
+                    SendStateUpdatedMessage();
+                }
+
+                KillNoDataTimer();
                 TweenAllValuesToOriginal();
             }
 #endif
 
         } //END HandleLegacyDebugInput Method
 
-#endregion
+        #endregion
 
         #region PRIVATE - TWEEN VALUES
 
@@ -514,16 +591,17 @@ namespace gambit.neuroguide
                 // Tween currentValue
                 system.data[ index ].activeTween = DOTween.To(
                     () => system.data[ index ].currentValue,
-                    x => system.data[ index ].currentValue = x,
+                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentValue = x;  },
                     targetValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
-                 .OnComplete( () => system.data[ index ].activeTween = null );
+                .OnUpdate( () => { if( index == 0 && system != null ) system.OnDataUpdate?.Invoke(system); } )
+                .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
                 // Tween currentNormalizedValue
                 DOTween.To(
                     () => system.data[ index ].currentNormalizedValue,
-                    x => system.data[ index ].currentNormalizedValue = x,
+                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentNormalizedValue = x; },
                     targetNormalizedValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType );
@@ -550,16 +628,17 @@ namespace gambit.neuroguide
                 // Tween back to originalValue
                 system.data[ index ].activeTween = DOTween.To(
                     () => system.data[ index ].currentValue,
-                    x => system.data[ index ].currentValue = x,
+                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentValue = x; },
                     system.data[ index ].originalValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
-                 .OnComplete( () => system.data[ index ].activeTween = null );
+                .OnUpdate( () => { if( index == 0 && system != null ) system.OnDataUpdate?.Invoke(system); } )
+                .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
                 // Tween back to originalNormalizedValue
                 DOTween.To(
                     () => system.data[ index ].currentNormalizedValue,
-                    x => system.data[ index ].currentNormalizedValue = x,
+                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentNormalizedValue = x; },
                     system.data[ index ].originalNormalizedValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType );
@@ -583,7 +662,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            system.OnDataUpdate?.Invoke();
+            system.OnDataUpdate?.Invoke(system);
 
         } //END SendDataUpdatedMessage Method
 
@@ -603,9 +682,74 @@ namespace gambit.neuroguide
                 return;
             }
 
-            system.OnStateUpdate?.Invoke(system.state);
+            system.OnStateUpdate?.Invoke(system, system.state);
 
         } //END SendDataUpdatedMessage Method
+
+        #endregion
+
+        #region PRIVATE - NO DATA TIMER
+
+        /// <summary>
+        /// If a debug keyboard tween completes, set a timer to go off, and when it does change the state to simulate no data being recieved
+        /// </summary>
+        //-----------------------------------------------------//
+        private static void HandleDebugNoDataTimer()
+        //-----------------------------------------------------//
+        {
+            
+            if(debugNoDataTimerActive)
+            {
+                debugNoDataTimerCurrentValue -= Time.deltaTime;
+                //Debug.Log( "HandleDebugNoDataTimer() value = " + debugNoDataTimerCurrentValue );
+
+                if(debugNoDataTimerCurrentValue <= 0f)
+                {
+                    FinishNoDataTimer();
+                }
+            }
+
+        } //END HandleDebugNoDataTimer
+
+        /// <summary>
+        /// Creates a timer, that will go off in a few moments, when it does we will change the state
+        /// </summary>
+        //----------------------------------------//
+        private static void StartNoDataTimer()
+        //----------------------------------------//
+        {
+            debugNoDataTimerActive = true;
+            debugNoDataTimerCurrentValue = debugNoDataTimerLength;
+
+        } //END StartNoDataTimer Method
+
+        /// <summary>
+        /// Called when the timer hits 0
+        /// </summary>
+        //--------------------------------------------//
+        private static void FinishNoDataTimer()
+        //--------------------------------------------//
+        {
+            debugNoDataTimerActive = false;
+
+            if(system.state != State.NoData)
+            {
+                system.state = State.NoData;
+                SendStateUpdatedMessage();
+            }
+
+        } //END FinishNoDataTimer Method
+
+        /// <summary>
+        /// Kills any active "No Data' timer that's active
+        /// </summary>
+        //-------------------------------------------------//
+        private static void KillNoDataTimer()
+        //-------------------------------------------------//
+        {
+            debugNoDataTimerActive = false;
+
+        } //END KillNoDataTimer
 
         #endregion
 
@@ -635,6 +779,8 @@ namespace gambit.neuroguide
                 DOTween.Kill( system.data[i].gameObject );
 #endif
             }
+
+            KillNoDataTimer();
 
             Instance.Invoke( "FinishDestroy", .1f );
 

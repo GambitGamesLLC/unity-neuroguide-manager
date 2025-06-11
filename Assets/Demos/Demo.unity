@@ -455,6 +455,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02b8a8e54242d0146a6ac6d144560b53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  logs: 1
+  debug: 1
+  entries: 1
+  min: -5
+  max: 5
+  ease: 30
+  duration: 2
 --- !u!4 &1626458823
 Transform:
   m_ObjectHideFlags: 0

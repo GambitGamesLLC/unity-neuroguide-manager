@@ -829,7 +829,7 @@ PlayerSettings:
     PS5: DOTWEEN
     QNX: DOTWEEN
     ReservedCFE: DOTWEEN
-    Standalone: DOTWEEN;GAMBIT_NEUROGUIDE
+    Standalone: DOTWEEN;GAMBIT_NEUROGUIDE;UNITY_INPUT;EXT_DOTWEEN
     VisionOS: DOTWEEN
     WebGL: DOTWEEN
     Windows Store Apps: DOTWEEN
