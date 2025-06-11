@@ -1,73 +1,144 @@
-# unity-neuroguide-manager  
+Of course. Here is an updated `README.md` that follows best practices for Unity packages, including multiple installation methods and detailed usage instructions for the `NeuroGuideManager.cs` class.
+
+-----
+
+# unity-neuroguide-manager
+
 Handles connectivity and data interaction with the NeuroGear neuromodulation headset for use in Unity3D desktop applications.
 
-**Assembly:**\
-com.gambit.neuroguide
+**Package Name:** com.gambit.neuroguide  
+**GameObject Display Name:** gambit.neuroguide.NeuroGuideManager (Singleton)
+**Namespace:** gambit.neuroguide  
+**Assembly Definition:** gambit.neuroguide  
+**Scripting Define Symbol:** GAMBIT_NEUROGUIDE
 
-**Namespace:**\
-gambit.neuroguide
+-----
 
-**ASMDEF File:**\
-gambit.neuroguide
+## INSTALLATION INSTRUCTIONS
 
-**Scripting Define Symbol:**\
-GAMBIT_NEUROGUIDE
+### Method 1: Unity Package Manager (via Git URL)
 
-------------------------------
-USAGE INSTRUCTIONS
-------------------------------
+This is the recommended installation method.
 
-**NeuroGuideManager.cs**\
-Singleton component for accessing and controlling the NeuroGear headset from Unity applications. This class will listen for data streams and provide normalized brain-state metrics for integration into cognitive training, wellness apps, and game-based experiences.
+1.  In your Unity project, open the **Package Manager** (`Window > Package Manager`).
+2.  Click the **'+'** button in the top-left corner and select **"Add package from git URL..."**
+3.  Enter the following URL:
+    ```
+    https://github.com/GambitGamesLLC/unity-neuroguide-manager.git?path=Assets/Plugins/Package
+    ```
+4.  To install a specific version, append the version tag to the URL:
+    ```
+    https://github.com/GambitGamesLLC/unity-neuroguide-manager.git?path=Assets/Plugins/Package#v1.0.0
+    ```
 
-### ▶ Initialization:
-```csharp
-NeuroGuideManager.Instance.Create(new NeuroGuideManager.Options
+**Alternatively, you can manually edit your project's `Packages/manifest.json` file:**
+
+```json
 {
-    showDebugLogs = true
-});
+  "dependencies": {
+    "com.gambit.neuroguide": "https://github.com/GambitGamesLLC/unity-neuroguide-manager.git?path=Assets/Plugins/Package",
+    ...
+  }
+}
 ```
 
-### 🔧 Public Options:
-- `showDebugLogs`: Enable or disable Unity console logs for internal state
-- Future options may include mock mode, simulated metrics, and data stream filters
+### Method 2: Local Installation
 
-------------------------------
-INSTALLATION INSTRUCTIONS
-------------------------------
+1.  Download or clone this repository to your computer.
+2.  In your Unity project, open the **Package Manager** (`Window > Package Manager`).
+3.  Click the **'+'** button in the top-left corner and select **"Add package from disk..."**
+4.  Navigate to the cloned repository folder and select the `package.json` file inside `Assets/Plugins/Package`.
 
-- Open your Unity package manager manifest file (`YourProject/Packages/manifest.json`)
+-----
 
-- Add a new entry like so:
+## USAGE INSTRUCTIONS
+
+The primary class for this package is **`NeuroGuideManager.cs`**. It's a singleton component used for accessing and controlling the NeuroGear headset. This class listens for data streams and provides normalized brain-state metrics.
+
+### ▶ Initialization & Usage
+
+To begin interacting with the headset, you must first initialize the manager.
+
+```csharp
+using gambit.neuroguide;
+using UnityEngine;
+
+public class NeuroGuideExample : MonoBehaviour
+{
+    void Start()
+    {
+        // Options for customizing the manager's behavior
+        var options = new NeuroGuideManager.Options
+        {
+            showDebugLogs = true,
+            enableDebugData = true,
+            debugNumberOfEntries = 10
+        };
+
+        // Create and initialize the NeuroGuide manager
+        NeuroGuideManager.Create(
+            options,
+            // OnSuccess: Called when the manager initializes successfully
+            (system) => {
+                Debug.Log("NeuroGuideManager created successfully! System data count: " + system.data.Count);
+            },
+            // OnFailed: Called if initialization fails
+            (error) => {
+                Debug.LogWarning("NeuroGuideManager failed to create: " + error);
+            },
+            // OnDataUpdated: Called every time new data is received from the headset
+            (system) => {
+                // Access real-time data from the headset
+                foreach (var sensorData in system.data)
+                {
+                    Debug.Log($"Sensor {sensorData.sensorID}: Value = {sensorData.currentValue}");
+                }
+            },
+            // OnStateUpdated: Called when the headset's connection state changes
+            (system, state) => {
+                Debug.Log("NeuroGuideManager state changed to: " + state);
+            }
+        );
+    }
+
+    void OnDestroy()
+    {
+        // Clean up the manager when you're done
+        NeuroGuideManager.Destroy();
+    }
+}
 ```
-"com.gambit.neuroguide": "https://github.com/GambitGamesLLC/unity-neuroguide-manager.git?path=Assets/Plugins/Package",
-```
 
-- For a specific version tag:
-```
-"com.gambit.neuroguide": "https://github.com/GambitGamesLLC/unity-neuroguide-manager.git?path=Assets/Plugins/Package#v1.0.0"
-```
+### 🔧 Public Options
 
-- Reference: [Unity Docs – Git Subfolder UPM](https://docs.unity3d.com/Manual/upm-git.html#subfolder)
+You can customize the manager's behavior by passing an `Options` object during creation.
 
-------------------------------
-RECOMMENDED PACKAGES
-------------------------------
+  * `showDebugLogs`: (bool) Enables or disables internal state logs in the Unity console.
+  * `enableDebugData`: (bool) Enables simulated data for testing without a headset. Allows keyboard input (Up/Down arrows) to control debug values.
+  * `debugNumberOfEntries`: (int) If debug data is enabled, this is the number of randomized data nodes to generate.
+  * `debugMinCurrentValue`: (float) The minimum value for debug data tweens.
+  * `debugMaxCurrentValue`: (float) The maximum value for debug data tweens.
+  * `debugTweenDuration`: (float) The duration (in seconds) for the debug value tweens.
+  * `debugEaseType`: (DG.Tweening.Ease) The DOTween ease type to use for debug animations (requires DOTween).
 
-**Gambit Singleton** [[Repo]](https://github.com/GambitGamesLLC/unity-singleton)\
-Used as the base pattern for `NeuroGuideManager.Instance`
+-----
 
-**Static Coroutine Utility** [[Repo]](https://github.com/GambitGamesLLC/unity-static-coroutine)\
-Allows coroutines to run from static contexts like the Singleton interface
+## DEPENDENCIES
 
-**DOTween Plugin** [[Asset Store]](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-plugin-dotween)\
-Used for animating debug/test data streams when simulating headset input
+This package relies on other open-source packages to function correctly.
 
-**Gambit Math Helper** [[Repo]](https://github.com/GambitGamesLLC/unity-math-helper)\
-Supports mapping EEG values from device range to normalized in-app range
+  * **Gambit Singleton** [[Repo]](https://github.com/GambitGamesLLC/unity-singleton)  
+    Used as the base pattern for `NeuroGuideManager.Instance`.
 
-------------------------------
-SUPPORT
-------------------------------
-Created and maintained by **Gambit Games LLC**\
+  * **Unity Input** [[Docs]](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/index.html)  
+    Utilizes the new and legacy input systems of Unity to simulate input using the arrow keys.
+
+  * **DOTween Plugin** (Optional) [[Asset Store]](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-plugin-dotween)  
+    Used for animating debug data streams when simulating headset input.
+
+-----
+
+## SUPPORT
+
+Created and maintained by **Gambit Games LLC**  
 For support or feature requests, contact: **gambitgamesllc@gmail.com**
