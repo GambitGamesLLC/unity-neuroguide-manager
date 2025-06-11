@@ -89,7 +89,68 @@ namespace gambit.neuroguide
         /// How much time remains in the No Data Timer?
         /// </summary>
         private static float debugNoDataTimerCurrentValue = 0f;
-        
+
+
+        #endregion
+
+        #region PUBLIC - START
+
+        /// <summary>
+        /// Unity lifecycle method
+        /// </summary>
+        //----------------------------------------//
+        public void Start()
+        //----------------------------------------//
+        {
+#if EXT_DOTWEEN
+            DOTween.Init( false, false, LogBehaviour.Verbose );
+#endif
+        } //END Start
+
+        #endregion
+
+        #region PUBLIC - UPDATE
+
+        /// <summary>
+        /// The Unity update method
+        /// </summary>
+        //---------------------------//
+        public void Update()
+        //---------------------------//
+        {
+
+            if(system == null)
+            {
+                return;
+            }
+
+            if(!system.options.enableDebugData)
+            {
+                return;
+            }
+
+            if(system.state == State.NotInitialized)
+            {
+                return;
+            }
+
+            if(system.data == null || (system.data != null && system.data.Count == 0))
+            {
+                return;
+            }
+
+#if EXT_DOTWEEN
+#if UNITY_INPUT
+            HandleDebugInput();
+#else
+            HandleLegacyDebugInput();
+#endif
+
+#endif
+
+            HandleDebugNoDataTimer();
+
+        } //END Update Method
 
         #endregion
 
@@ -266,6 +327,68 @@ namespace gambit.neuroguide
 
         #endregion
 
+        #region PUBLIC - DESTROY
+
+        /// <summary>
+        /// Stops listening to input and prepare the manager to have Create() called again
+        /// </summary>
+        //-------------------------------//
+        public static void Destroy()
+        //-------------------------------//
+        {
+
+            if(system == null)
+            {
+                return;
+            }
+
+            if(system.data == null || (system.data != null && system.data.Count == 0))
+            {
+                return;
+            }
+
+            for(int i = 0; i < system.data.Count; i++)
+            {
+#if EXT_DOTWEEN
+                DOTween.Kill( system.data[ i ].gameObject );
+#endif
+            }
+
+            KillNoDataTimer();
+
+            Instance.Invoke( "FinishDestroy", .1f );
+
+        } //END Destroy Method
+
+        /// <summary>
+        /// Invoked by Destroy(), after allowing for tweens to be cleaned up, destroys the gameobjects
+        /// </summary>
+        //------------------------------------//
+        private void FinishDestroy()
+        //------------------------------------//
+        {
+            if(system.options.showDebugLogs)
+            {
+                Debug.Log( "NeuroGuideManager.cs FinishDestroy() cleaned up objects and data, ready to Create()" );
+            }
+
+            if(system != null && system.data.Count > 0)
+            {
+                for(int i = 0; i < system.data.Count; i++)
+                {
+                    if(system.data[ i ].gameObject != null)
+                    {
+                        Destroy( system.data[ i ].gameObject );
+                    }
+                }
+            }
+
+            system = null;
+
+        } //END FinishDestroy
+
+        #endregion
+
         #region PRIVATE - CHECK CONNECTION
 
         /// <summary>
@@ -385,67 +508,6 @@ namespace gambit.neuroguide
             return (float)(random.NextDouble() * (maxValue - minValue) + minValue);
 
         } //END GenerateRandomFloat Method
-
-        #endregion
-
-        #region PUBLIC - START
-
-        /// <summary>
-        /// Unity lifecycle method
-        /// </summary>
-        //----------------------------------------//
-        public void Start()
-        //----------------------------------------//
-        {
-#if EXT_DOTWEEN
-            DOTween.Init( false, false, LogBehaviour.Verbose );
-#endif
-        } //END Start
-
-#endregion
-
-        #region PUBLIC - UPDATE
-
-        /// <summary>
-        /// The Unity update method
-        /// </summary>
-        //---------------------------//
-        public void Update()
-        //---------------------------//
-        {
-            
-            if( system == null )
-            {
-                return;
-            }
-
-            if( !system.options.enableDebugData )
-            {
-                return;
-            }
-
-            if(system.state == State.NotInitialized)
-            {
-                return;
-            }
-
-            if(system.data == null || ( system.data != null && system.data.Count == 0 ) )
-            {
-                return;
-            }
-
-#if EXT_DOTWEEN
-#if UNITY_INPUT
-            HandleDebugInput();
-#else
-            HandleLegacyDebugInput();
-#endif
-
-#endif
-
-            HandleDebugNoDataTimer();
-
-        } //END Update Method
 
         #endregion
 
@@ -764,68 +826,6 @@ namespace gambit.neuroguide
             debugNoDataTimerActive = false;
 
         } //END KillNoDataTimer
-
-        #endregion
-
-        #region PUBLIC - DESTROY
-
-        /// <summary>
-        /// Stops listening to input and prepare the manager to have Create() called again
-        /// </summary>
-        //-------------------------------//
-        public static void Destroy()
-        //-------------------------------//
-        {
-
-            if(system == null)
-            {
-                return;
-            }
-
-            if(system.data == null || (system.data != null && system.data.Count == 0))
-            {
-                return;
-            }
-
-            for( int i = 0; i < system.data.Count; i++ )
-            {
-#if EXT_DOTWEEN
-                DOTween.Kill( system.data[i].gameObject );
-#endif
-            }
-
-            KillNoDataTimer();
-
-            Instance.Invoke( "FinishDestroy", .1f );
-
-        } //END Destroy Method
-
-        /// <summary>
-        /// Invoked by Destroy(), after allowing for tweens to be cleaned up, destroys the gameobjects
-        /// </summary>
-        //------------------------------------//
-        private void FinishDestroy()
-        //------------------------------------//
-        {
-            if(system.options.showDebugLogs)
-            {
-                Debug.Log( "NeuroGuideManager.cs FinishDestroy() cleaned up objects and data, ready to Create()" );
-            }
-
-            if(system != null && system.data.Count > 0)
-            {
-                for(int i = 0; i < system.data.Count; i++)
-                {
-                    if(system.data[ i ].gameObject != null)
-                    {
-                        Destroy( system.data[ i ].gameObject );
-                    }
-                }
-            }
-            
-            system = null;
-
-        } //END FinishDestroy
 
         #endregion
 
