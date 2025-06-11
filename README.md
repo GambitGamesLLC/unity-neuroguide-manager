@@ -11,9 +11,9 @@ Handles connectivity and data interaction with the NeuroGuide neuromodulation he
 -----
 
 ## DEMO INSTRUCTIONS
-A quick demo scene to see how the NeuroGuide hardware and our manager works. 
-Spawns cubes based on debug values set in the demo scene that follow the NeuroGear hardware values as they are read. 
-If no NeuroGuide is present, you can control the cubes using the Keyboard arrow keys.
+A quick demo scene to see how the NeuroGuide hardware and our manager works.  
+Spawns cubes based on debug values set in the demo scene that follow the NeuroGear hardware values as they are read.  
+If no NeuroGuide is present, you can control the cubes using the Keyboard arrow keys.  
 
 - Open the Unity Project in the editor on a PC with a keyboard attached.
 - Open Assets/Demos/Demo.unity scene
