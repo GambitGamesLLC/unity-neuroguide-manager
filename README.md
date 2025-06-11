@@ -18,7 +18,7 @@ A quick demo scene to see how the NeuroGuide hardware and our manager works. Spa
 - Look at the Demo GameObject and its values in the scene inspector, make sure the `debug` variable is enabled if you want to test without the NeuroGuide hardware
 - Play the scene
 
-## CONTROLS
+## DEMO CONTROLS
 - `Enter Key` - Creates a NeuroGuideSystem and spawns cubes to match the data
 - `Delete Key` - Destroys the NeuroGuideSystem and any spawned cubes, afterwards the `Enter` key can be pressed again to spawn a new NeuroGuideSystem
 - `Up Key` - Tweens the debug value of each NeuroGuideData node to the max value, set by the public value in the NeuroGuideDemo component on the Demo GameObject
