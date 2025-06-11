@@ -22,7 +22,7 @@ namespace gambit.neuroguide
     #endregion
 
     /// <summary>
-    /// Spawns cubes to test the NeuroGear hardware package. Press Enter to spawn, Delete to destroy, and Up and Down keys to test
+    /// Spawns cubes to test the NeuroGuide hardware package. Press Enter to spawn, Delete to destroy, and Up and Down keys to test
     /// </summary>
     public class NeuroGuideDemo : MonoBehaviour
 {
@@ -87,22 +87,22 @@ namespace gambit.neuroguide
 #if UNITY_INPUT
         if(Keyboard.current.enterKey.wasPressedThisFrame)
         {
-            CreateNeuroGearManager();
+            CreateNeuroGuideManager();
         }
 #else
         if( Input.GetKeyUp( KeyCode.Enter ) )
         {
-            CreateNeuroGearManager();
+            CreateNeuroGuideManager();
         }
 #endif
 
     } //END CreateOnEnterKey Method
 
     /// <summary>
-    /// Creates the NeuroGearManager
+    /// Creates the NeuroGuideManager
     /// </summary>
     //---------------------------------------------//
-    private void CreateNeuroGearManager()
+    private void CreateNeuroGuideManager()
     //---------------------------------------------//
     {
 
@@ -120,7 +120,7 @@ namespace gambit.neuroguide
                 debugTweenDuration = duration
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
-                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGearManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
+                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
 
                 //Spawn cubes to match the system data
                 for(int i = 0; i < system.data.Count; i++)
@@ -137,7 +137,7 @@ namespace gambit.neuroguide
             },
             (NeuroGuideManager.NeuroGuideSystem system) =>
             {
-                //Debug.Log( "NeuroGuideDemo CreateNeuroGearManager() Data Updated" );
+                //Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated" );
 
                 if(system != null && system.data != null && system.data.Count > 0)
                 {
@@ -155,10 +155,10 @@ namespace gambit.neuroguide
             },
         ( NeuroGuideManager.NeuroGuideSystem system, NeuroGuideManager.State state ) =>
             {
-                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGearManager() State changed to " + state.ToString() );
+                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
             } );
 
-    } //END CreateNeuroGearManager Method
+    } //END CreateNeuroGuideManager Method
 
 #endregion
 

@@ -81,7 +81,7 @@ namespace gambit.neuroguide
         private static bool debugNoDataTimerActive = false;
 
         /// <summary>
-        /// How long we want to wait after a debug keyboard tween completes before we switch states to simulate a lack of data being sent by the NeuroGear hardware
+        /// How long we want to wait after a debug keyboard tween completes before we switch states to simulate a lack of data being sent by the NeuroGuide hardware
         /// </summary>
         private static float debugNoDataTimerLength = 4f;
 
@@ -108,7 +108,7 @@ namespace gambit.neuroguide
             public bool showDebugLogs = true;
 
             /// <summary>
-            /// Should we enable debug data on initialization, and then allow for keyboard input to debug input values? Press 'Up' on the keyboard to raise the values "Read" by the debug NeuroGear Device
+            /// Should we enable debug data on initialization, and then allow for keyboard input to debug input values? Press 'Up' on the keyboard to raise the values "Read" by the debug NeuroGuide Device
             /// </summary>
             public bool enableDebugData = false;
 
@@ -227,11 +227,11 @@ namespace gambit.neuroguide
             //If the user didn't pass in any options, use the defaults
             if( options == null ) options = new Options();
 
-            //If we are set to debug the NeuroGear hardware, make sure we have access to the tween system, as we use it to debug the values changing over time
+            //If we are set to debug the NeuroGuide hardware, make sure we have access to the tween system, as we use it to debug the values changing over time
 #if !EXT_DOTWEEN
             if( options.enableDebugKeyboardInput )
             {
-                OnFailed?.Invoke( "NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGear values using the keyboard input. Unable to continue.");
+                OnFailed?.Invoke( "NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGuide values using the keyboard input. Unable to continue.");
                 return;
             }
 #endif
@@ -245,10 +245,10 @@ namespace gambit.neuroguide
             //Connect to the NeuroGuide hardware to make sure we can see it
             await CheckConnection();
 
-            //If we were unable to make a connection to the NeuroGear hardware, we cannot continue
+            //If we were unable to make a connection to the NeuroGuide hardware, we cannot continue
             if(system.state == State.NotInitialized)
             {
-                OnFailed?.Invoke( "NeuroGuideManager.cs Create() Unable to connect to NeuroGear hardware. Unable to continue." );
+                OnFailed?.Invoke( "NeuroGuideManager.cs Create() Unable to connect to NeuroGuide hardware. Unable to continue." );
                 return;
             }
 
@@ -264,7 +264,7 @@ namespace gambit.neuroguide
         #region PRIVATE - CHECK CONNECTION
 
         /// <summary>
-        /// Performs a check of the NeuroGear hardware, if connected updates our State
+        /// Performs a check of the NeuroGuide hardware, if connected updates our State
         /// </summary>
         /// <returns></returns>
         //----------------------------------------------------//
@@ -279,7 +279,7 @@ namespace gambit.neuroguide
                 
             }
 
-            //Since we don't know anything about the NeuroGear, let's just say we're connected
+            //Since we don't know anything about the NeuroGuide, let's just say we're connected
             system.state = State.Initialized;
 
             SendStateUpdatedMessage();
@@ -291,7 +291,7 @@ namespace gambit.neuroguide
         #region PRIVATE - INITIALIZE DATA
 
         /// <summary>
-        /// Initializes the NeuroGear hardware data nodes, creating a number of nodes based on how many nodes our hardware is reporting
+        /// Initializes the NeuroGuide hardware data nodes, creating a number of nodes based on how many nodes our hardware is reporting
         /// </summary>
         //---------------------------------------------------------------------//
         private static void InitializeData()

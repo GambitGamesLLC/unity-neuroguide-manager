@@ -1,6 +1,6 @@
 # unity-neuroguide-manager
 
-Handles connectivity and data interaction with the NeuroGear neuromodulation headset for use in Unity3D desktop applications.
+Handles connectivity and data interaction with the NeuroGuide neuromodulation headset for use in Unity3D desktop applications.
 
 **Package Name:** com.gambit.neuroguide  
 **GameObject Display Name:** gambit.neuroguide.NeuroGuideManager (Singleton)
@@ -49,7 +49,7 @@ This is the recommended installation method.
 
 ## USAGE INSTRUCTIONS
 
-The primary class for this package is **`NeuroGuideManager.cs`**. It's a singleton component used for accessing and controlling the NeuroGear headset. This class listens for data streams and provides normalized brain-state metrics.
+The primary class for this package is **`NeuroGuideManager.cs`**. It's a singleton component used for accessing and controlling the NeuroGuide headset. This class listens for data streams and provides normalized brain-state metrics.
 
 ### ▶ Initialization & Usage
 
