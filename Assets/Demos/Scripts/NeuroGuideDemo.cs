@@ -27,9 +27,9 @@ namespace gambit.neuroguide
     public class NeuroGuideDemo : MonoBehaviour
 {
 
-    #region PRIVATE - VARIABLES
+    #region PUBLIC - VARIABLES
 
-    private GameObject cubeParent;
+        private GameObject cubeParent;
 
         /// <summary>
         /// Should we enable the NeuroGuideManager debug logs?
