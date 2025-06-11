@@ -142,7 +142,7 @@ You can customize the manager's behavior by passing an `Options` object during c
 
 This package relies on other open-source packages to function correctly.
 
-  * **Gambit Singleton** (Optional) [[Repo]](https://github.com/GambitGamesLLC/unity-singleton)  
+  * **Gambit Singleton** (Optional) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-singleton)  
     If 'GAMBIT_SINGLETON' scripting define symbol is present. Used as the base pattern for `NeuroGuideManager.Instance`. If not included we utilize a built in alternative, but we recommend this package in any project using Singletons to keep this common code to one location.
 
   * **Unity Input** (Optional) [[Docs]](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/index.html)  
