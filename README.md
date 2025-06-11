@@ -3,7 +3,7 @@
 Handles connectivity and data interaction with the NeuroGuide neuromodulation headset for use in Unity3D desktop applications.
 
 **Package Name:** com.gambit.neuroguide  
-**GameObject Display Name:** gambit.neuroguide.NeuroGuideManager (Singleton)
+**GameObject Display Name:** gambit.neuroguide.NeuroGuideManager (Singleton)  
 **Namespace:** gambit.neuroguide  
 **Assembly Definition:** gambit.neuroguide  
 **Scripting Define Symbol:** GAMBIT_NEUROGUIDE
