@@ -1,7 +1,3 @@
-Of course. Here is an updated `README.md` that follows best practices for Unity packages, including multiple installation methods and detailed usage instructions for the `NeuroGuideManager.cs` class.
-
------
-
 # unity-neuroguide-manager
 
 Handles connectivity and data interaction with the NeuroGear neuromodulation headset for use in Unity3D desktop applications.
