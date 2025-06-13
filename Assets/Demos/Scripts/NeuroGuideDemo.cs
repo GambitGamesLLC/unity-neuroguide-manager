@@ -153,7 +153,7 @@ namespace gambit.neuroguide
                 debugRandomizeStartingValues = randomizeStartValue
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
-                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
+                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
 
                 //Spawn cubes to match the system data
                 for(int i = 0; i < system.data.Count; i++)
@@ -166,11 +166,11 @@ namespace gambit.neuroguide
                 
             },
             ( string error ) => {
-                Debug.LogWarning( error );
+                if( logs ) Debug.LogWarning( error );
             },
             (NeuroGuideManager.NeuroGuideSystem system) =>
             {
-                //Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated" );
+                //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated" );
 
                 if(system != null && system.data != null && system.data.Count > 0)
                 {
@@ -188,7 +188,7 @@ namespace gambit.neuroguide
             },
         ( NeuroGuideManager.NeuroGuideSystem system, NeuroGuideManager.State state ) =>
             {
-                Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
+                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
             } );
 
     } //END CreateNeuroGuideManager Method

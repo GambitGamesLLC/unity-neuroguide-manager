@@ -455,7 +455,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02b8a8e54242d0146a6ac6d144560b53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  logs: 1
+  logs: 0
   debug: 1
   entries: 10
   min: -5

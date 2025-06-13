@@ -93,22 +93,6 @@ namespace gambit.neuroguide
 
         #endregion
 
-        #region PUBLIC - START
-
-        /// <summary>
-        /// Unity lifecycle method
-        /// </summary>
-        //----------------------------------------//
-        public void Start()
-        //----------------------------------------//
-        {
-#if EXT_DOTWEEN
-            DOTween.Init( false, false, LogBehaviour.Verbose );
-#endif
-        } //END Start
-
-        #endregion
-
         #region PUBLIC - UPDATE
 
         /// <summary>
