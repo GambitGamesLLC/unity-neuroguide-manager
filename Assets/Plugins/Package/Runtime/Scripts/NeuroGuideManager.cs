@@ -44,16 +44,16 @@ public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
 using DG.Tweening;
 #endif
 
+#if UNITY_INPUT
+using UnityEngine.InputSystem;
+#endif
+
 using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-
-#if UNITY_INPUT
-using UnityEngine.InputSystem;
 using System.Linq;
-#endif
 
 #endregion
 
@@ -947,7 +947,9 @@ namespace gambit.neuroguide
         //----------------------------------------------------------------------------------------------//
         {
             // To include inactive GameObjects in the search, use the FindObjectsInactive parameter.
-            INeuroGuideInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType( typeof( INeuroGuideInteractable ), FindObjectsInactive.Include, FindObjectsSortMode.None ) as INeuroGuideInteractable[ ];
+            INeuroGuideInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>( FindObjectsInactive.Include, FindObjectsSortMode.None )
+                                                             .OfType<INeuroGuideInteractable>()
+                                                             .ToArray();
 
             if(interfaces == null || (interfaces != null && interfaces.Length == 0))
             {
