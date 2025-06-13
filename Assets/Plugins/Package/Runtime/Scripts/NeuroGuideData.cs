@@ -45,6 +45,11 @@ namespace gambit.neuroguide
         public Tween activeTween;
 #endif
 
+        /// <summary>
+        /// Is the current value below the threshold?
+        /// </summary>
+        public bool belowThreshold = false;
+
     } //END NeuroGuideData Class
 
 } //END gambit.neuroguide Namespace

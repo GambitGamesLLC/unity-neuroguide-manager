@@ -205,6 +205,11 @@ namespace gambit.neuroguide
             public Ease debugEaseType = Ease.InOutExpo;
 #endif
 
+            /// <summary>
+            /// If 'enableDebugData' is true, we use this as the threshold value, if we're below this threshold then the hardware is in a "reward" state
+            /// </summary>
+            public float debugThreshold = .5f;
+
         } //END Options
 
         #endregion
@@ -263,6 +268,26 @@ namespace gambit.neuroguide
             /// </summary>
             public Action<NeuroGuideSystem, State> OnStateUpdate;
 
+            /// <summary>
+            /// The average of all values from the data nodes
+            /// </summary>
+            public float currentAverageValue = 0f;
+
+            /// <summary>
+            /// The average of all values from the data nodes, normalized between 0-1
+            /// </summary>
+            public float currentNormalizedAverageValue = 0f;
+
+            /// <summary>
+            /// The threshold value we check against to see if we're below. If debug is enabled, this is passed in as part of the Options
+            /// </summary>
+            public float threshold = .5f;
+
+            /// <summary>
+            /// Are the average values below the threshold? If using 'debug' mode, the threshold value was passed in during Option
+            /// </summary>
+            public bool averageValueBelowThreshold = false;
+
         } //END NeuroGuideSystem
         #endregion
 
@@ -295,7 +320,7 @@ namespace gambit.neuroguide
 
             //If we are set to debug the NeuroGuide hardware, make sure we have access to the tween system, as we use it to debug the values changing over time
 #if !EXT_DOTWEEN
-            if( options.enableDebugKeyboardInput )
+            if( options.enableDebugData )
             {
                 OnFailed?.Invoke( "NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGuide values using the keyboard input. Unable to continue.");
                 return;
@@ -466,6 +491,14 @@ namespace gambit.neuroguide
 
                     system.data.Add( data );
                 }
+
+
+                //Set our threshold value to the debug value
+                if(system.options.enableDebugData)
+                {
+                    system.threshold = system.options.debugThreshold;
+                }
+
             }
 
         } //END InitializeData
@@ -671,7 +704,7 @@ namespace gambit.neuroguide
                     targetValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
-                .OnUpdate( () => { if( index == 0 && system != null ) system.OnDataUpdate?.Invoke(system); } )
+                .OnUpdate( () => { if(index == 0 && system != null) SendDataUpdatedMessage(); } )
                 .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
                 // Tween currentNormalizedValue
@@ -708,7 +741,7 @@ namespace gambit.neuroguide
                     system.data[ index ].originalValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
-                .OnUpdate( () => { if( index == 0 && system != null ) system.OnDataUpdate?.Invoke(system); } )
+                .OnUpdate( () => { if( index == 0 && system != null ) SendDataUpdatedMessage(); } )
                 .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
                 // Tween back to originalNormalizedValue
@@ -733,9 +766,58 @@ namespace gambit.neuroguide
         private static void SendDataUpdatedMessage()
         //---------------------------------------------------//
         {
-            if(system == null)
+            if(system == null || 
+              (system != null && system.data == null ) || 
+              (system != null && system.data != null && system.data.Count == 0 ) )
             {
                 return;
+            }
+
+            //Go through each node and track if its below the threshold
+            for(int i = 0; i < system.data.Count; i++)
+            {
+                if(system.data[ i ].currentValue < system.threshold)
+                {
+                    system.data[ i ].belowThreshold = true;
+                }
+                else
+                {
+                    system.data[ i ].belowThreshold = false;
+                }
+            }
+
+            //Figure out the average of all data nodes, as well as the average normalized value
+            float currentAverage = 0f;
+            float currentNormalizedValue = 0f;
+
+            for(int i = 0; i < system.data.Count; i++)
+            {
+                currentAverage += system.data[ i ].currentValue;
+                currentNormalizedValue += system.data[ i ].currentNormalizedValue;
+            }
+
+            currentAverage = currentAverage / system.data.Count;
+            currentNormalizedValue = currentNormalizedValue / system.data.Count;
+
+            system.currentAverageValue = currentAverage;
+            system.currentNormalizedAverageValue = currentNormalizedValue;
+
+            //Check if our average is below the threshold
+            if(system.currentAverageValue > system.threshold)
+            {
+                system.averageValueBelowThreshold = true;
+            }
+            else
+            {
+                system.averageValueBelowThreshold = false;
+            }
+
+            if(system.options.showDebugLogs)
+            {
+                Debug.Log( "DataUpdated() " + system.averageValueBelowThreshold + "\n" +
+                    "currentAverage = " + system.currentAverageValue + "\n" +
+                    "currentNormalizedAverage = " + system.currentNormalizedAverageValue + "\n" +
+                    "data.count = " + system.data.Count );
             }
 
             system.OnDataUpdate?.Invoke(system);
@@ -760,7 +842,7 @@ namespace gambit.neuroguide
 
             system.OnStateUpdate?.Invoke(system, system.state);
 
-        } //END SendDataUpdatedMessage Method
+        } //END SendStateUpdatedMessage Method
 
         #endregion
 
