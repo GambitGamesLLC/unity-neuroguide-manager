@@ -21,6 +21,12 @@ namespace gambit.neuroguide
         /// <param name="system">The current NeuroGuideSystem object that stores up to date info about the NeuroGuide hardware</param>
         void OnDataUpdate( NeuroGuideManager.NeuroGuideSystem system );
 
+        /// <summary>
+        /// Called when the NeuroGuide hardware state changes
+        /// </summary>
+        /// <param name="system">The current NeuroGuideSystem object that stores up to date info about the NeuroGuide hardware</param>
+        void OnStateUpdate( NeuroGuideManager.NeuroGuideSystem system );
+
     } //END INeuroGuideInteractable Interface Class
 
 }

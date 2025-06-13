@@ -52,6 +52,7 @@ using System.Threading.Tasks;
 
 #if UNITY_INPUT
 using UnityEngine.InputSystem;
+using System.Linq;
 #endif
 
 #endregion
@@ -89,7 +90,6 @@ namespace gambit.neuroguide
         /// How much time remains in the No Data Timer?
         /// </summary>
         private static float debugNoDataTimerCurrentValue = 0f;
-
 
         #endregion
 
@@ -288,6 +288,11 @@ namespace gambit.neuroguide
             /// </summary>
             public bool averageValueBelowThreshold = false;
 
+            /// <summary>
+            /// List of the interactables we located when initializing
+            /// </summary>
+            public List<INeuroGuideInteractable> interactables = new List<INeuroGuideInteractable>();
+
         } //END NeuroGuideSystem
         #endregion
 
@@ -344,6 +349,8 @@ namespace gambit.neuroguide
             }
 
             InitializeData();
+
+            StoreAllComponentsWithInterfaceIncludingInactive( system );
 
             //We're done, call the OnSuccess callback
             OnSuccess?.Invoke(system);
@@ -820,6 +827,15 @@ namespace gambit.neuroguide
                     "data.count = " + system.data.Count );
             }
 
+            //Let all interactables know about the update
+            for(int i = 0; i < system.interactables.Count; i++)
+            {
+                if(system.interactables[i] != null )
+                {
+                    system.interactables[ i ].OnDataUpdate( system );
+                }
+            }
+
             system.OnDataUpdate?.Invoke(system);
 
         } //END SendDataUpdatedMessage Method
@@ -838,6 +854,15 @@ namespace gambit.neuroguide
             if(system == null)
             {
                 return;
+            }
+
+            //Let all interactables know about the state
+            for(int i = 0; i < system.interactables.Count; i++)
+            {
+                if(system.interactables[ i ] != null)
+                {
+                    system.interactables[ i ].OnStateUpdate( system );
+                }
             }
 
             system.OnStateUpdate?.Invoke(system, system.state);
@@ -908,6 +933,32 @@ namespace gambit.neuroguide
             debugNoDataTimerActive = false;
 
         } //END KillNoDataTimer
+
+        #endregion
+
+        #region PRIVATE - STORE ALL COMPONENTS WITH INTERFACE
+
+        /// <summary>
+        /// Finds all components (both active and inactive) in the scene that implement the INeuroGuideInteractable interface.
+        /// </summary>
+        /// <returns>A List of components that implement the INeuroGuideInteractable.</returns>
+        //----------------------------------------------------------------------------------------------//
+        private static void StoreAllComponentsWithInterfaceIncludingInactive( NeuroGuideSystem system )
+        //----------------------------------------------------------------------------------------------//
+        {
+            // To include inactive GameObjects in the search, use the FindObjectsInactive parameter.
+            INeuroGuideInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType( typeof( INeuroGuideInteractable ), FindObjectsInactive.Include, FindObjectsSortMode.None ) as INeuroGuideInteractable[ ];
+
+            if(interfaces == null || (interfaces != null && interfaces.Length == 0))
+            {
+                return;
+            }
+            else
+            {
+                system.interactables = new List<INeuroGuideInteractable>( interfaces );
+            }
+
+        } //END StoreAllComponentsWithInterfaceIncludingInactive Method
 
         #endregion
 
