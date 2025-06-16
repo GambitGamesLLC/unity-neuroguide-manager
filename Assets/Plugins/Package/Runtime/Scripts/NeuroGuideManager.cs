@@ -40,6 +40,10 @@ public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
 } //END Singleton<T> class
 #endif
 
+#if GAMBIT_MATHHELPER
+using gambit.mathhelper;
+#endif
+
 #if EXT_DOTWEEN
 using DG.Tweening;
 #endif
@@ -691,7 +695,20 @@ namespace gambit.neuroguide
                 // Tween currentValue
                 system.data[ index ].activeTween = DOTween.To(
                     () => system.data[ index ].currentValue,
-                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentValue = x;  },
+                    (x) => 
+                    {
+                        //Update the current value and normalized value for this node
+                        if(system != null && system.data != null && system.data.Count > 0)
+                        {
+                            system.data[ index ].currentValue = x;
+
+#if GAMBIT_MATHHELPER
+                            system.data[ index ].currentNormalizedValue = MathHelper.Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
+#else
+                            system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
+#endif
+                        }
+                    },
                     targetValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
@@ -728,7 +745,20 @@ namespace gambit.neuroguide
                 // Tween back to originalValue
                 system.data[ index ].activeTween = DOTween.To(
                     () => system.data[ index ].currentValue,
-                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentValue = x; },
+                    ( x ) =>
+                    {
+                        //Update the current value and normalized value for this node
+                        if(system != null && system.data != null && system.data.Count > 0)
+                        {
+                            system.data[ index ].currentValue = x;
+
+#if GAMBIT_MATHHELPER
+                            system.data[ index ].currentNormalizedValue = MathHelper.Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
+#else
+                            system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
+#endif
+                        }
+                    },
                     system.data[ index ].originalValue,
                     system.options.debugTweenDuration
                 ).SetEase( system.options.debugEaseType )
@@ -792,6 +822,15 @@ namespace gambit.neuroguide
 
             system.currentAverageValue = currentAverage;
             system.currentNormalizedAverageValue = currentNormalizedValue;
+
+            if(system.currentNormalizedAverageValue < 0f)
+            {
+                system.currentNormalizedAverageValue = 0f;
+            }
+            else if(system.currentNormalizedAverageValue > 1f)
+            {
+                system.currentNormalizedAverageValue = 1f;
+            }
 
             //Check if our average is below the threshold
             if(system.currentAverageValue > system.threshold)
@@ -947,6 +986,38 @@ namespace gambit.neuroguide
         } //END StoreAllComponentsWithInterfaceIncludingInactive Method
 
         #endregion
+
+        #region PRIVATE - MAP
+
+        //This functionality is included if we import the MathHelper
+#if !GAMBIT_MATHHELPER
+        /// <summary>
+        /// Remaps a value from one range to another.
+        /// </summary>
+        /// <param name="value">The input value to remap.</param>
+        /// <param name="inMin">The original range's minimum.</param>
+        /// <param name="inMax">The original range's maximum.</param>
+        /// <param name="outMin">The new range's minimum.</param>
+        /// <param name="outMax">The new range's maximum.</param>
+        /// <returns>The remapped value in the target range.</returns>
+        //--------------------------------------------------------------------------------------------//
+        public static float Map( float value, float inMin, float inMax, float outMin, float outMax )
+        //--------------------------------------------------------------------------------------------//
+        {
+            if(Mathf.Approximately( inMax - inMin, 0f ))
+            {
+                Debug.LogWarning( "[MathHelper] Input range is zero. Returning outMin." );
+                return outMin;
+            }
+
+            float normalized = (value - inMin) / (inMax - inMin);
+            return outMin + (normalized * (outMax - outMin));
+
+        } //END Map
+
+#endif
+
+#endregion
 
     } //END NeuroGuideManager Class
 

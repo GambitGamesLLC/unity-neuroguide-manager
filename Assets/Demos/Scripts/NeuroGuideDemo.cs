@@ -170,7 +170,7 @@ namespace gambit.neuroguide
             },
             (NeuroGuideManager.NeuroGuideSystem system) =>
             {
-                //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated" );
+                if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated normalizeAve = " + system.currentNormalizedAverageValue );
 
                 if(system != null && system.data != null && system.data.Count > 0)
                 {
