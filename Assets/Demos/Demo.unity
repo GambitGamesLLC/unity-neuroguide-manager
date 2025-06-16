@@ -462,7 +462,8 @@ MonoBehaviour:
   max: 2
   ease: 30
   duration: 2
-  randomizeStartValue: 0
+  randomizeStartValue: 1
+  threshold: 1
 --- !u!4 &1626458823
 Transform:
   m_ObjectHideFlags: 0
