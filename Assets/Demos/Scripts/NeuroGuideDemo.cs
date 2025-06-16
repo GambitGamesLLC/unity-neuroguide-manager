@@ -73,14 +73,19 @@ namespace gambit.neuroguide
         /// </summary>
         public bool randomizeStartValue = true;
 
+        /// <summary>
+        /// What is the threshold we want our nodes to be below before we are in a positive state?
+        /// </summary>
+        public float threshold = 0.5f;
+
     #endregion
 
-    #region PUBLIC - START
+        #region PUBLIC - START
 
-    /// <summary>
-    /// Unity lifecycle method
-    /// </summary>
-    //----------------------------------//
+        /// <summary>
+        /// Unity lifecycle method
+        /// </summary>
+        //----------------------------------//
     public void Start()
     //----------------------------------//
     {
@@ -150,7 +155,8 @@ namespace gambit.neuroguide
                 debugEaseType = ease,
 #endif
                 debugTweenDuration = duration,
-                debugRandomizeStartingValues = randomizeStartValue
+                debugRandomizeStartingValues = randomizeStartValue,
+                debugThreshold = threshold
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
                 if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
@@ -170,7 +176,7 @@ namespace gambit.neuroguide
             },
             (NeuroGuideManager.NeuroGuideSystem system) =>
             {
-                if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated normalizeAve = " + system.currentNormalizedAverageValue );
+                //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated normalizeAve = " + system.currentNormalizedAverageValue );
 
                 if(system != null && system.data != null && system.data.Count > 0)
                 {

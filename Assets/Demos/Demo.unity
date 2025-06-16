@@ -457,9 +457,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logs: 1
   debug: 1
-  entries: 1
-  min: 0
-  max: 1
+  entries: 10
+  min: -2
+  max: 2
   ease: 30
   duration: 2
   randomizeStartValue: 0

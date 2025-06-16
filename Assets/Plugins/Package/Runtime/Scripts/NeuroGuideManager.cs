@@ -274,7 +274,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// Are the average values below the threshold? If using 'debug' mode, the threshold value was passed in during Option
             /// </summary>
-            public bool averageValueBelowThreshold = false;
+            public bool isAverageValueBelowThreshold = false;
 
             /// <summary>
             /// List of the interactables we located when initializing
@@ -701,12 +701,12 @@ namespace gambit.neuroguide
                         if(system != null && system.data != null && system.data.Count > 0)
                         {
                             system.data[ index ].currentValue = x;
-
 #if GAMBIT_MATHHELPER
                             system.data[ index ].currentNormalizedValue = MathHelper.Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
 #else
                             system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
 #endif
+                            //Debug.Log( "normalized = " + system.data[ index ].currentNormalizedValue + " \n value = " + x + " fromMin = " + system.options.debugMinCurrentValue + ", fromMax = " + system.options.debugMaxCurrentValue + " toMin = 0f toMax = 1f" );
                         }
                     },
                     targetValue,
@@ -715,13 +715,6 @@ namespace gambit.neuroguide
                 .OnUpdate( () => { if(index == 0 && system != null) SendDataUpdatedMessage(); } )
                 .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
-                // Tween currentNormalizedValue
-                DOTween.To(
-                    () => system.data[ index ].currentNormalizedValue,
-                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentNormalizedValue = x; },
-                    targetNormalizedValue,
-                    system.options.debugTweenDuration
-                ).SetEase( system.options.debugEaseType );
             }
 
         } //END TweenAllValues
@@ -757,6 +750,7 @@ namespace gambit.neuroguide
 #else
                             system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
 #endif
+                            //Debug.Log( "normalized = " + system.data[index].currentNormalizedValue + " \n value = " + x + " fromMin = " + system.options.debugMinCurrentValue + ", fromMax = " + system.options.debugMaxCurrentValue + " toMin = 0f toMax = 1f" );
                         }
                     },
                     system.data[ index ].originalValue,
@@ -765,13 +759,6 @@ namespace gambit.neuroguide
                 .OnUpdate( () => { if( index == 0 && system != null ) SendDataUpdatedMessage(); } )
                 .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
 
-                // Tween back to originalNormalizedValue
-                DOTween.To(
-                    () => system.data[ index ].currentNormalizedValue,
-                    x => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].currentNormalizedValue = x; },
-                    system.data[ index ].originalNormalizedValue,
-                    system.options.debugTweenDuration
-                ).SetEase( system.options.debugEaseType );
             }
 
         } //END TweenAllValuesToOriginal
@@ -835,16 +822,16 @@ namespace gambit.neuroguide
             //Check if our average is below the threshold
             if(system.currentAverageValue > system.threshold)
             {
-                system.averageValueBelowThreshold = true;
+                system.isAverageValueBelowThreshold = true;
             }
             else
             {
-                system.averageValueBelowThreshold = false;
+                system.isAverageValueBelowThreshold = false;
             }
 
             if(system.options.showDebugLogs)
             {
-                Debug.Log( "DataUpdated() " + system.averageValueBelowThreshold + "\n" +
+                Debug.Log( "DataUpdated() " + system.isAverageValueBelowThreshold + "\n" +
                     "currentAverage = " + system.currentAverageValue + "\n" +
                     "currentNormalizedAverage = " + system.currentNormalizedAverageValue + "\n" +
                     "data.count = " + system.data.Count );
@@ -995,29 +982,39 @@ namespace gambit.neuroguide
         /// Remaps a value from one range to another.
         /// </summary>
         /// <param name="value">The input value to remap.</param>
-        /// <param name="inMin">The original range's minimum.</param>
-        /// <param name="inMax">The original range's maximum.</param>
-        /// <param name="outMin">The new range's minimum.</param>
-        /// <param name="outMax">The new range's maximum.</param>
+        /// <param name="fromMin">The original range's minimum.</param>
+        /// <param name="fromMax">The original range's maximum.</param>
+        /// <param name="toMin">The new range's minimum.</param>
+        /// <param name="toMax">The new range's maximum.</param>
         /// <returns>The remapped value in the target range.</returns>
         //--------------------------------------------------------------------------------------------//
-        public static float Map( float value, float inMin, float inMax, float outMin, float outMax )
+        public static float Map(float value, float fromMin, float fromMax, float toMin, float toMax)
         //--------------------------------------------------------------------------------------------//
         {
-            if(Mathf.Approximately( inMax - inMin, 0f ))
+            if(fromMin == fromMax)
             {
-                Debug.LogWarning( "[MathHelper] Input range is zero. Returning outMin." );
-                return outMin;
+                Debug.LogError( "NeuroGuideManager.cs Map() fromMin & fromMax are equal, returning the 'toMin' value" );
+                return toMin;
+            }
+            if(toMin == toMax)
+            {
+                Debug.LogError( "NeuroGuideManager.cs Map() toMin & toMax are equal, returning the 'toMin' value" );
+                return toMin;
+            }
+            if(fromMin == toMin && fromMax == toMax)
+            {
+                Debug.LogError( "NeuroGuideManager.cs Map() passed in 'fromMin' is the same as 'toMin', and 'fromMax' is the same as 'toMax'. Unable to continue" );
+                return toMin;
             }
 
-            float normalized = (value - inMin) / (inMax - inMin);
-            return outMin + (normalized * (outMax - outMin));
+            //Perform the remapping
+            return ((value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin);
 
-        } //END Map
+        } //END Map Method
 
 #endif
 
-#endregion
+        #endregion
 
     } //END NeuroGuideManager Class
 
