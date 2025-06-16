@@ -145,6 +145,9 @@ This package relies on other open-source packages to function correctly.
   * **Gambit Singleton** (Optional) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-singleton)  
     If 'GAMBIT_SINGLETON' scripting define symbol is present. Used as the base pattern for `NeuroGuideManager.Instance`. If not included we utilize a built in alternative, but we recommend this package in any project using Singletons to keep this common code to one location.
 
+  * **Gambit Math Helper** (Optional) [[Gambit Repo]](https://github.com/GambitGamesLLC/unity-math-helper)  
+    If 'GAMBIT_MATH_HELPER' scripting define symbol is present. Used to perform Map() operations to convert a value into a normalized 0-1 value within a specified range.
+
   * **Unity Input** (Optional) [[Docs]](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/index.html)  
     If 'UNITY_INPUT' scripting define symbol is present. Uses the new input system for simulating hardware via keyboard input when the `enableDebugData` option is enabled during Create(). If the 'UNITY_INPUT' scripting define symbol is not set, we will use the Legacy Input System.
 
