@@ -1,8 +1,8 @@
 {
   "name": "com.gambit.neuroguide",
   "version": "1.0.0",
-  "displayName": "NeuroGuide-Manager",
-  "description": "used to read data and respond to events from the NeuroGuide hardware.",
+  "displayName": "NeuroGuide Manager",
+  "description": "Used to read data and respond to events from the NeuroGuide hardware.",
   "unity": "6000.1",
   "documentationUrl": "https://github.com/GambitGamesLLC/unity-neuroguide-manager",
   "changelogUrl": "https://github.com/GambitGamesLLC/unity-neuroguide-manager",
