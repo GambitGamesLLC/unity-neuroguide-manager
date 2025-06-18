@@ -40,24 +40,13 @@ public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
 } //END Singleton<T> class
 #endif
 
-#if GAMBIT_MATHHELPER
-using gambit.mathhelper;
-#endif
-
-#if EXT_DOTWEEN
-using DG.Tweening;
-#endif
-
 #if UNITY_INPUT
 using UnityEngine.InputSystem;
 #endif
 
 using System;
 using UnityEngine;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using System.Linq;
 
 #endregion
 
@@ -79,21 +68,6 @@ namespace gambit.neuroguide
         #endregion
 
         #region PRIVATE - VARIABLES
-
-        /// <summary>
-        /// Flag for if we've finished a debug keyboard tween, so the timer to change to the 'No Data' incoming state should be activated
-        /// </summary>
-        private static bool debugNoDataTimerActive = false;
-
-        /// <summary>
-        /// How long we want to wait after a debug keyboard tween completes before we switch states to simulate a lack of data being sent by the NeuroGuide hardware
-        /// </summary>
-        private static float debugNoDataTimerLength = 4f;
-
-        /// <summary>
-        /// How much time remains in the No Data Timer?
-        /// </summary>
-        private static float debugNoDataTimerCurrentValue = 0f;
 
         #endregion
 
@@ -122,11 +96,6 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if(system.data == null || (system.data != null && system.data.Count == 0))
-            {
-                return;
-            }
-
 #if EXT_DOTWEEN
 #if UNITY_INPUT
             HandleDebugInput();
@@ -135,8 +104,6 @@ namespace gambit.neuroguide
 #endif
 
 #endif
-
-            HandleDebugNoDataTimer();
 
         } //END Update Method
 
@@ -157,46 +124,9 @@ namespace gambit.neuroguide
             public bool showDebugLogs = true;
 
             /// <summary>
-            /// Should we enable debug data on initialization, and then allow for keyboard input to debug input values? Press 'Up' on the keyboard to raise the values "Read" by the debug NeuroGuide Device
+            /// Should we enable debug data on initialization, and then allow for keyboard input to debug input values? Press 'Up' on the keyboard to send a stream of reward=true values
             /// </summary>
             public bool enableDebugData = false;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will generate a number of randomized data nodes based on this value
-            /// </summary>
-            public int debugNumberOfEntries = 100;
-
-            /// <summary>
-            /// If 'enabledDebugData' is true, we check this flag to see if we should randomize the starting values of the NeuroGuideData, if disabled the NeuroGuideData values are zero at start
-            /// </summary>
-            public bool debugRandomizeStartingValues = true;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will use this 'minimum' value as the lowest value we tween to when holding the 'Down' arrow key
-            /// </summary>
-            public float debugMinCurrentValue = 0.0f;
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we will use this 'max' value as the highest value we tween to when holding the 'Up' arrow key
-            /// </summary>
-            public float debugMaxCurrentValue = 50.0f;
-
-            /// <summary>
-            /// How long should it take for our debug keyboard input tweens to reach the max or min value?
-            /// </summary>
-            public float debugTweenDuration = 5f;
-
-#if EXT_DOTWEEN
-            /// <summary>
-            /// What is the tweening type our debug functionality should use to change values over time?
-            /// </summary>
-            public Ease debugEaseType = Ease.InOutExpo;
-#endif
-
-            /// <summary>
-            /// If 'enableDebugData' is true, we use this as the threshold value, if we're below this threshold then the hardware is in a "reward" state
-            /// </summary>
-            public float debugThreshold = .5f;
 
         } //END Options
 
@@ -237,49 +167,14 @@ namespace gambit.neuroguide
             public State state = State.NotInitialized;
 
             /// <summary>
-            /// A collection of data read from the hardware, updated each cycle
+            /// Unity action to call when the NeuroGuide data has been updated
             /// </summary>
-            public List<NeuroGuideData> data = new List<NeuroGuideData>();
-
-            // A single instance of System.Random for consistent random number generation.
-            // This addresses the issue where rapid instantiation of System.Random
-            // can lead to identical sequences if seeded by the system clock too quickly.
-            public System.Random random = new System.Random();
-
-            /// <summary>
-            /// Unity action to call when data has been updated
-            /// </summary>
-            public Action<NeuroGuideSystem> OnDataUpdate;
+            public Action<NeuroGuideData> OnDataUpdate;
 
             /// <summary>
             /// Unity action to call when the hardware state has changed
             /// </summary>
-            public Action<NeuroGuideSystem, State> OnStateUpdate;
-
-            /// <summary>
-            /// The average of all values from the data nodes
-            /// </summary>
-            public float currentAverageValue = 0f;
-
-            /// <summary>
-            /// The average of all values from the data nodes, normalized between 0-1
-            /// </summary>
-            public float currentNormalizedAverageValue = 0f;
-
-            /// <summary>
-            /// The threshold value we check against to see if we're below. If debug is enabled, this is passed in as part of the Options
-            /// </summary>
-            public float threshold = .5f;
-
-            /// <summary>
-            /// Are the average values below the threshold? If using 'debug' mode, the threshold value was passed in during Option
-            /// </summary>
-            public bool isAverageValueBelowThreshold = false;
-
-            /// <summary>
-            /// List of the interactables we located when initializing
-            /// </summary>
-            public List<INeuroGuideInteractable> interactables = new List<INeuroGuideInteractable>();
+            public Action<State> OnStateUpdate;
 
         } //END NeuroGuideSystem
         #endregion
@@ -297,8 +192,8 @@ namespace gambit.neuroguide
             Options options = null,
             Action<NeuroGuideSystem> OnSuccess = null,
             Action< string> OnFailed = null,
-            Action<NeuroGuideSystem> OnDataUpdated = null,
-            Action<NeuroGuideSystem, State> OnStateUpdated = null)
+            Action<NeuroGuideData> OnDataUpdated = null,
+            Action<State> OnStateUpdated = null)
         //-------------------------------------//
         {
             if( system != null )
@@ -307,18 +202,8 @@ namespace gambit.neuroguide
                 return;
             }
 
-
             //If the user didn't pass in any options, use the defaults
             if( options == null ) options = new Options();
-
-            //If we are set to debug the NeuroGuide hardware, make sure we have access to the tween system, as we use it to debug the values changing over time
-#if !EXT_DOTWEEN
-            if( options.enableDebugData )
-            {
-                OnFailed?.Invoke( "NeuroGuideManager.cs Create() missing 'EXT_DOTWEEN' scripting define symbol or package. But we need to use tweens to debug our NeuroGuide values using the keyboard input. Unable to continue.");
-                return;
-            }
-#endif
 
             //Generate a NeuroGuideSystem object
             system = new NeuroGuideSystem();
@@ -337,8 +222,6 @@ namespace gambit.neuroguide
             }
 
             InitializeData();
-
-            StoreAllComponentsWithInterfaceIncludingInactive( system );
 
             //We're done, call the OnSuccess callback
             OnSuccess?.Invoke(system);
@@ -362,20 +245,6 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if(system.data == null || (system.data != null && system.data.Count == 0))
-            {
-                return;
-            }
-
-            for(int i = 0; i < system.data.Count; i++)
-            {
-#if EXT_DOTWEEN
-                DOTween.Kill( system.data[ i ].gameObject );
-#endif
-            }
-
-            KillNoDataTimer();
-
             Instance.Invoke( "FinishDestroy", .1f );
 
         } //END Destroy Method
@@ -390,17 +259,6 @@ namespace gambit.neuroguide
             if(system.options.showDebugLogs)
             {
                 Debug.Log( "NeuroGuideManager.cs FinishDestroy() cleaned up objects and data, ready to Create()" );
-            }
-
-            if(system != null && system.data.Count > 0)
-            {
-                for(int i = 0; i < system.data.Count; i++)
-                {
-                    if(system.data[ i ].gameObject != null)
-                    {
-                        Destroy( system.data[ i ].gameObject );
-                    }
-                }
             }
 
             system = null;
@@ -439,7 +297,7 @@ namespace gambit.neuroguide
         #region PRIVATE - INITIALIZE DATA
 
         /// <summary>
-        /// Initializes the NeuroGuide hardware data nodes, creating a number of nodes based on how many nodes our hardware is reporting
+        /// Starts a UDP connection to connect to a port
         /// </summary>
         //---------------------------------------------------------------------//
         private static void InitializeData()
@@ -452,90 +310,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            //If debug data is enabled, initialize a number of debug data nodes
-            if(system.options.enableDebugData)
-            {
-                system.data = new List<NeuroGuideData>(system.options.debugNumberOfEntries);
-                
-                for( int i = 0; i < system.options.debugNumberOfEntries; i++ )
-                {
-                    GameObject go = new GameObject();
-                    go.name = GenerateRandomSensorID( 8, system.random ); // Generate an 8-character ID
-
-                    go.transform.parent = NeuroGuideManager.Instance.transform;
-
-                    NeuroGuideData data = go.AddComponent<NeuroGuideData>();
-                    data.sensorID = go.name;
-
-                    if(system.options.debugRandomizeStartingValues)
-                    {
-                        data.currentValue = GenerateRandomFloat( system.random, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue );
-                        data.currentNormalizedValue = GenerateRandomFloat( system.random, 0.0f, 1.0f ); // Normalized value typically 0-1
-                    }
-                    else
-                    {
-                        data.currentValue = 0f;
-                        data.currentNormalizedValue = 0f;
-                    }
-
-#if EXT_DOTWEEN
-                    // Store the original values for tweening back
-                    data.originalValue = data.currentValue;
-                    data.originalNormalizedValue = data.currentNormalizedValue;
-#endif
-
-                    system.data.Add( data );
-                }
-
-
-                //Set our threshold value to the debug value
-                if(system.options.enableDebugData)
-                {
-                    system.threshold = system.options.debugThreshold;
-                }
-
-            }
-
         } //END InitializeData
-
-        #endregion
-
-        #region PRIVATE - GENERATE DEBUG DATA
-
-        /// <summary>
-        /// Helper function to generate a random string for sensorID
-        /// </summary>
-        /// <param name="length">How long the ID should be</param>
-        /// <param name="random">Instance of System.Random</param>
-        /// <returns></returns>
-        //-----------------------------------------------------------------------------//
-        private static string GenerateRandomSensorID( int length, System.Random random )
-        //-----------------------------------------------------------------------------//
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            StringBuilder result = new StringBuilder( length );
-            for(int i = 0; i < length; i++)
-            {
-                result.Append( chars[ random.Next( chars.Length ) ] );
-            }
-            return result.ToString();
-
-        } //END GenerateRandomSensorID Method
-
-        /// <summary>
-        /// Helper function to generate a single random float
-        /// </summary>
-        /// <param name="random">Instance of System.Random</param>
-        /// <param name="minValue"></param>
-        /// <param name="maxValue"></param>
-        /// <returns></returns>
-        //---------------------------------------------------------------------------------------------//
-        private static float GenerateRandomFloat( System.Random random, float minValue, float maxValue )
-        //---------------------------------------------------------------------------------------------//
-        {
-            return (float)(random.NextDouble() * (maxValue - minValue) + minValue);
-
-        } //END GenerateRandomFloat Method
 
         #endregion
 
@@ -550,7 +325,9 @@ namespace gambit.neuroguide
         {
 
 #if UNITY_INPUT
-            
+
+            NeuroGuideData data = new NeuroGuideData();
+
             // --- UP ARROW ---
             if(Keyboard.current.upArrowKey.wasPressedThisFrame)
             {
@@ -560,11 +337,10 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                KillNoDataTimer();
-                TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
+                data.isRecievingReward = true;
+                SendDataUpdatedMessage( data );
             }
-
-            if(Keyboard.current.upArrowKey.wasReleasedThisFrame)
+            else if(Keyboard.current.downArrowKey.wasPressedThisFrame)
             {
                 if(system.state != State.ReceivingData)
                 {
@@ -572,34 +348,10 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                KillNoDataTimer();
-                TweenAllValuesToOriginal();
+                data.isRecievingReward = false;
+                SendDataUpdatedMessage( data );
             }
 
-            // --- DOWN ARROW ---
-            if(Keyboard.current.downArrowKey.wasPressedThisFrame)
-            {
-                if(system.state != State.ReceivingData)
-                {
-                    system.state = State.ReceivingData;
-                    SendStateUpdatedMessage();
-                }
-
-                KillNoDataTimer();
-                TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
-            }
-
-            if(Keyboard.current.downArrowKey.wasReleasedThisFrame)
-            {
-                if(system.state != State.ReceivingData)
-                {
-                    system.state = State.ReceivingData;
-                    SendStateUpdatedMessage();
-                }
-
-                KillNoDataTimer();
-                TweenAllValuesToOriginal();
-            }
 #endif
 
         } //END HandleDebugInput Method
@@ -626,11 +378,10 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                KillNoDataTimer();
-                TweenAllValues( system.options.debugMaxCurrentValue, 1.0f );
+                data.isRecievingReward = true;
+                SendDataUpdatedMessage( data );
             }
-
-            if(Input.GetKeyUp( KeyCode.UpArrow ))
+            else if( Input.GetKeyDown( KeyCode.DownArrow ) )
             {
                 if(system.state != State.ReceivingData)
                 {
@@ -638,130 +389,12 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                KillNoDataTimer();
-                TweenAllValuesToOriginal();
-            }
-
-            // --- DOWN ARROW ---
-            if(Input.GetKeyDown( KeyCode.DownArrow ))
-            {
-                if(system.state != State.ReceivingData)
-                {
-                    system.state = State.ReceivingData;
-                    SendStateUpdatedMessage();
-                }
-
-                KillNoDataTimer();
-                TweenAllValues( system.options.debugMinCurrentValue, 0.0f );
-            }
-
-            if(Input.GetKeyUp( KeyCode.DownArrow ))
-            {
-                if(system.state != State.ReceivingData)
-                {
-                    system.state = State.ReceivingData;
-                    SendStateUpdatedMessage();
-                }
-
-                KillNoDataTimer();
-                TweenAllValuesToOriginal();
+                data.isRecievingReward = false;
+                SendDataUpdatedMessage( data );
             }
 #endif
 
         } //END HandleLegacyDebugInput Method
-
-        #endregion
-
-        #region PRIVATE - TWEEN VALUES
-
-        /// <summary>
-        /// Tweens all data values to a target value.
-        /// </summary>
-        //------------------------------------------------------------------------------------//
-        private void TweenAllValues( float targetValue, float targetNormalizedValue )
-        //------------------------------------------------------------------------------------//
-        {
-            for(int i = 0; i < system.data.Count; i++)
-            {
-                // Capture the index in a local variable to avoid closure issues.
-                int index = i;
-
-                // Kill any existing tween on this data item.
-                if(system.data[ index ].activeTween != null && system.data[ index ].activeTween.IsActive())
-                {
-                    system.data[ index ].activeTween.Kill( false );
-                }
-
-                // Tween currentValue
-                system.data[ index ].activeTween = DOTween.To(
-                    () => system.data[ index ].currentValue,
-                    (x) => 
-                    {
-                        //Update the current value and normalized value for this node
-                        if(system != null && system.data != null && system.data.Count > 0)
-                        {
-                            system.data[ index ].currentValue = x;
-#if GAMBIT_MATHHELPER
-                            system.data[ index ].currentNormalizedValue = MathHelper.Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
-#else
-                            system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
-#endif
-                            //Debug.Log( "normalized = " + system.data[ index ].currentNormalizedValue + " \n value = " + x + " fromMin = " + system.options.debugMinCurrentValue + ", fromMax = " + system.options.debugMaxCurrentValue + " toMin = 0f toMax = 1f" );
-                        }
-                    },
-                    targetValue,
-                    system.options.debugTweenDuration
-                ).SetEase( system.options.debugEaseType )
-                .OnUpdate( () => { if(index == 0 && system != null) SendDataUpdatedMessage(); } )
-                .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
-
-            }
-
-        } //END TweenAllValues
-
-        /// <summary>
-        /// Tweens all data values back to their original state.
-        /// </summary>
-        //----------------------------------------------------------//
-        private void TweenAllValuesToOriginal()
-        //----------------------------------------------------------//
-        {
-            for(int i = 0; i < system.data.Count; i++)
-            {
-                int index = i;
-
-                if(system.data[ index ].activeTween != null && system.data[ index ].activeTween.IsActive())
-                {
-                    system.data[ index ].activeTween.Kill( false );
-                }
-
-                // Tween back to originalValue
-                system.data[ index ].activeTween = DOTween.To(
-                    () => system.data[ index ].currentValue,
-                    ( x ) =>
-                    {
-                        //Update the current value and normalized value for this node
-                        if(system != null && system.data != null && system.data.Count > 0)
-                        {
-                            system.data[ index ].currentValue = x;
-
-#if GAMBIT_MATHHELPER
-                            system.data[ index ].currentNormalizedValue = MathHelper.Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
-#else
-                            system.data[ index ].currentNormalizedValue = Map( x, system.options.debugMinCurrentValue, system.options.debugMaxCurrentValue, 0f, 1f );
-#endif
-                            //Debug.Log( "normalized = " + system.data[index].currentNormalizedValue + " \n value = " + x + " fromMin = " + system.options.debugMinCurrentValue + ", fromMax = " + system.options.debugMaxCurrentValue + " toMin = 0f toMax = 1f" );
-                        }
-                    },
-                    system.data[ index ].originalValue,
-                    system.options.debugTweenDuration
-                ).SetEase( system.options.debugEaseType )
-                .OnUpdate( () => { if( index == 0 && system != null ) SendDataUpdatedMessage(); } )
-                .OnComplete( () => { if(system != null && system.data != null && system.data.Count > 0) system.data[ index ].activeTween = null; StartNoDataTimer(); } );
-
-            }
-
-        } //END TweenAllValuesToOriginal
 
         #endregion
 
@@ -771,82 +404,15 @@ namespace gambit.neuroguide
         /// Sends a message out to any listeners via the Unity Action<> system
         /// </summary>
         //---------------------------------------------------//
-        private static void SendDataUpdatedMessage()
+        private static void SendDataUpdatedMessage( NeuroGuideData data )
         //---------------------------------------------------//
         {
-            if(system == null || 
-              (system != null && system.data == null ) || 
-              (system != null && system.data != null && system.data.Count == 0 ) )
+            if(system == null )
             {
                 return;
             }
 
-            //Go through each node and track if its below the threshold
-            for(int i = 0; i < system.data.Count; i++)
-            {
-                if(system.data[ i ].currentValue < system.threshold)
-                {
-                    system.data[ i ].belowThreshold = true;
-                }
-                else
-                {
-                    system.data[ i ].belowThreshold = false;
-                }
-            }
-
-            //Figure out the average of all data nodes, as well as the average normalized value
-            float currentAverage = 0f;
-            float currentNormalizedValue = 0f;
-
-            for(int i = 0; i < system.data.Count; i++)
-            {
-                currentAverage += system.data[ i ].currentValue;
-                currentNormalizedValue += system.data[ i ].currentNormalizedValue;
-            }
-
-            currentAverage = currentAverage / system.data.Count;
-            currentNormalizedValue = currentNormalizedValue / system.data.Count;
-
-            system.currentAverageValue = currentAverage;
-            system.currentNormalizedAverageValue = currentNormalizedValue;
-
-            if(system.currentNormalizedAverageValue < 0f)
-            {
-                system.currentNormalizedAverageValue = 0f;
-            }
-            else if(system.currentNormalizedAverageValue > 1f)
-            {
-                system.currentNormalizedAverageValue = 1f;
-            }
-
-            //Check if our average is below the threshold
-            if(system.currentAverageValue > system.threshold)
-            {
-                system.isAverageValueBelowThreshold = true;
-            }
-            else
-            {
-                system.isAverageValueBelowThreshold = false;
-            }
-
-            if(system.options.showDebugLogs)
-            {
-                Debug.Log( "DataUpdated() " + system.isAverageValueBelowThreshold + "\n" +
-                    "currentAverage = " + system.currentAverageValue + "\n" +
-                    "currentNormalizedAverage = " + system.currentNormalizedAverageValue + "\n" +
-                    "data.count = " + system.data.Count );
-            }
-
-            //Let all interactables know about the update
-            for(int i = 0; i < system.interactables.Count; i++)
-            {
-                if(system.interactables[i] != null )
-                {
-                    system.interactables[ i ].OnDataUpdate( system );
-                }
-            }
-
-            system.OnDataUpdate?.Invoke(system);
+            system.OnDataUpdate?.Invoke( data );
 
         } //END SendDataUpdatedMessage Method
 
@@ -866,154 +432,9 @@ namespace gambit.neuroguide
                 return;
             }
 
-            //Let all interactables know about the state
-            for(int i = 0; i < system.interactables.Count; i++)
-            {
-                if(system.interactables[ i ] != null)
-                {
-                    system.interactables[ i ].OnStateUpdate( system );
-                }
-            }
-
-            system.OnStateUpdate?.Invoke(system, system.state);
+            system.OnStateUpdate?.Invoke(system.state);
 
         } //END SendStateUpdatedMessage Method
-
-        #endregion
-
-        #region PRIVATE - NO DATA TIMER
-
-        /// <summary>
-        /// If a debug keyboard tween completes, set a timer to go off, and when it does change the state to simulate no data being recieved
-        /// </summary>
-        //-----------------------------------------------------//
-        private static void HandleDebugNoDataTimer()
-        //-----------------------------------------------------//
-        {
-            
-            if(debugNoDataTimerActive)
-            {
-                debugNoDataTimerCurrentValue -= Time.deltaTime;
-                //Debug.Log( "HandleDebugNoDataTimer() value = " + debugNoDataTimerCurrentValue );
-
-                if(debugNoDataTimerCurrentValue <= 0f)
-                {
-                    FinishNoDataTimer();
-                }
-            }
-
-        } //END HandleDebugNoDataTimer
-
-        /// <summary>
-        /// Creates a timer, that will go off in a few moments, when it does we will change the state
-        /// </summary>
-        //----------------------------------------//
-        private static void StartNoDataTimer()
-        //----------------------------------------//
-        {
-            debugNoDataTimerActive = true;
-            debugNoDataTimerCurrentValue = debugNoDataTimerLength;
-
-        } //END StartNoDataTimer Method
-
-        /// <summary>
-        /// Called when the timer hits 0
-        /// </summary>
-        //--------------------------------------------//
-        private static void FinishNoDataTimer()
-        //--------------------------------------------//
-        {
-            debugNoDataTimerActive = false;
-
-            if(system.state != State.NoData)
-            {
-                system.state = State.NoData;
-                SendStateUpdatedMessage();
-            }
-
-        } //END FinishNoDataTimer Method
-
-        /// <summary>
-        /// Kills any active "No Data' timer that's active
-        /// </summary>
-        //-------------------------------------------------//
-        private static void KillNoDataTimer()
-        //-------------------------------------------------//
-        {
-            debugNoDataTimerActive = false;
-
-        } //END KillNoDataTimer
-
-        #endregion
-
-        #region PRIVATE - STORE ALL COMPONENTS WITH INTERFACE
-
-        /// <summary>
-        /// Finds all components (both active and inactive) in the scene that implement the INeuroGuideInteractable interface.
-        /// </summary>
-        /// <returns>A List of components that implement the INeuroGuideInteractable.</returns>
-        //----------------------------------------------------------------------------------------------//
-        private static void StoreAllComponentsWithInterfaceIncludingInactive( NeuroGuideSystem system )
-        //----------------------------------------------------------------------------------------------//
-        {
-            // To include inactive GameObjects in the search, use the FindObjectsInactive parameter.
-            INeuroGuideInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>( FindObjectsInactive.Include, FindObjectsSortMode.None )
-                                                             .OfType<INeuroGuideInteractable>()
-                                                             .ToArray();
-
-            if(interfaces == null || (interfaces != null && interfaces.Length == 0))
-            {
-                return;
-            }
-            else
-            {
-                system.interactables = new List<INeuroGuideInteractable>( interfaces );
-            }
-
-        } //END StoreAllComponentsWithInterfaceIncludingInactive Method
-
-        #endregion
-
-        #region PRIVATE - MAP
-
-        //This functionality is included if we import the MathHelper
-#if !GAMBIT_MATHHELPER
-
-        /// <summary>
-        /// Remaps a value from one range to another.
-        /// </summary>
-        /// <param name="value">The input value to remap.</param>
-        /// <param name="fromMin">The original range's minimum.</param>
-        /// <param name="fromMax">The original range's maximum.</param>
-        /// <param name="toMin">The new range's minimum.</param>
-        /// <param name="toMax">The new range's maximum.</param>
-        /// <returns>The remapped value in the target range.</returns>
-        //--------------------------------------------------------------------------------------------//
-        public static float Map(float value, float fromMin, float fromMax, float toMin, float toMax, bool showLogs = false )
-        //--------------------------------------------------------------------------------------------//
-        {
-            if(fromMin == fromMax)
-            {
-                if( showLogs ) Debug.LogError( "MathHelper.cs Map() fromMin & fromMax are equal, returning the 'toMin' value" );
-                return toMin;
-            }
-            if(toMin == toMax)
-            {
-                if( showLogs ) Debug.LogError( "MathHelper.cs Map() toMin & toMax are equal, returning the 'toMin' value" );
-                return toMin;
-            }
-            if(fromMin == toMin && fromMax == toMax)
-            {
-                if( showLogs ) Debug.LogWarning( "MathHelper.cs Map() passed in 'fromMin' is the same as 'toMin', and 'fromMax' is the same as 'toMax'. Returning original value" );
-                return value;
-            }
-
-            //Perform the remapping
-            return ((value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin);
-
-        } //END Map Method
-
-#endif
 
         #endregion
 

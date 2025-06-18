@@ -29,54 +29,20 @@ namespace gambit.neuroguide
 
     #region PUBLIC - VARIABLES
 
-        private GameObject cubeParent;
+    /// <summary>
+    /// Should we enable the NeuroGuideManager debug logs?
+    /// </summary>
+    public bool logs = true;
+
+    /// <summary>
+    /// Should we enable the debug system for the NeuroGear hardware? This will enable keyboard events to control simulated NeuroGear hardware data spawned during the Create() method of NeuroGuideManager.cs
+    /// </summary>
+    public bool debug = true;
 
         /// <summary>
-        /// Should we enable the NeuroGuideManager debug logs?
+        /// How long should this experience last if the user were to be in a reward state (doesn't have to be consecutively), but their score to get towards the goal lowers when they are not in the reward state
         /// </summary>
-        public bool logs = true;
-
-        /// <summary>
-        /// Should we enable the debug system for the NeuroGear hardware? This will enable keyboard events to control simulated NeuroGear hardware data spawned during the Create() method of NeuroGuideManager.cs
-        /// </summary>
-        public bool debug = true;
-
-        /// <summary>
-        /// How many cubes should we spawn? Each cube will be tied to a NeuroGuideData object
-        /// </summary>
-        public int entries = 1;
-
-        /// <summary>
-        /// What is the min value we should use for the local position possible to reach by the cube movement?
-        /// </summary>
-        public int min = -5;
-
-        /// <summary>
-        /// What is the max value we should use for the local position possible to reach by the cube movement?
-        /// </summary>
-        public int max = 5;
-
-#if EXT_DOTWEEN
-        /// <summary>
-        /// What tween easing should we use?
-        /// </summary>
-        public Ease ease = Ease.OutBounce;
-#endif
-
-        /// <summary>
-        /// How long should our tweens take?
-        /// </summary>
-        public int duration = 2;
-
-        /// <summary>
-        /// Should the starting value of our NeuroGuideData be randomized?
-        /// </summary>
-        public bool randomizeStartValue = true;
-
-        /// <summary>
-        /// What is the threshold we want our nodes to be below before we are in a positive state?
-        /// </summary>
-        public float threshold = 0.5f;
+        public float totalDurationInSeconds = 120;
 
     #endregion
 
@@ -89,7 +55,11 @@ namespace gambit.neuroguide
     public void Start()
     //----------------------------------//
     {
-        cubeParent = gameObject;
+        //Spawn cube to show progress for debugging
+        GameObject go = GameObject.CreatePrimitive( PrimitiveType.Cube );
+        go.name = "Cube";
+        go.transform.parent = gameObject.transform;
+        go.transform.localPosition = new Vector3( 0, 0, 0 );
 
     } //END Start Method
 
@@ -147,57 +117,38 @@ namespace gambit.neuroguide
             new NeuroGuideManager.Options()
             {
                 showDebugLogs = logs,
-                enableDebugData = debug,
-                debugNumberOfEntries = entries,
-                debugMinCurrentValue = min,
-                debugMaxCurrentValue = max,
-#if EXT_DOTWEEN
-                debugEaseType = ease,
-#endif
-                debugTweenDuration = duration,
-                debugRandomizeStartingValues = randomizeStartValue,
-                debugThreshold = threshold
+                enableDebugData = debug
             },
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
-                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object... system.data.count = " + system.data.Count );
+                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
 
-                //Spawn cubes to match the system data
-                for(int i = 0; i < system.data.Count; i++)
-                {
-                    GameObject go = GameObject.CreatePrimitive( PrimitiveType.Cube );
-                    go.name = "Cube: " + system.data[i].name;
-                    go.transform.parent = cubeParent.transform;
-                    go.transform.localPosition = new Vector3( system.data[i].currentValue, 0, 0 );
-                }
-                
+                CreateNeuroGuideExperience();
             },
             ( string error ) => {
                 if( logs ) Debug.LogWarning( error );
             },
-            (NeuroGuideManager.NeuroGuideSystem system) =>
+            (NeuroGuideData) =>
             {
-                //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Data Updated normalizeAve = " + system.currentNormalizedAverageValue );
-
-                if(system != null && system.data != null && system.data.Count > 0)
-                {
-                    for(int i = 0; i < system.data.Count; i++)
-                    {
-                        GameObject go = GameObject.Find( "Cube: " + system.data[ i ].name );
-
-                        if(go != null)
-                        {
-                            go.transform.localPosition = new Vector3( system.data[ i ].currentValue, 0, 0 );
-                        }
-                    }
-                }
-                
+                //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Hardware Data updated ... data.isRecievingReward = " + data.isRecievingReward );
             },
-        ( NeuroGuideManager.NeuroGuideSystem system, NeuroGuideManager.State state ) =>
+            ( NeuroGuideManager.State state ) =>
             {
                 if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
             } );
 
     } //END CreateNeuroGuideManager Method
+
+    //----------------------------------------------//
+    private void CreateNeuroGuideExperience()
+    //----------------------------------------------//
+    {
+        NeuroGuideExperience.Options options = new NeuroGuideExperience.Options();
+        options.showDebugLogs = logs;
+        options.totalDurationInSeconds = totalDurationInSeconds;
+
+        NeuroGuideExperience.Create(); 
+    
+    } //END CreateNeuroGuideExperience Method
 
 #endregion
 
@@ -216,12 +167,14 @@ namespace gambit.neuroguide
         {
             DestroyCubes();
             NeuroGuideManager.Destroy();
+            NeuroGuideExperience.Destroy();
         }
 #else
         if( Input.GetKeyUp( KeyCode.Delete ) )
         {
             DestroyCubes();
             NeuroGuideManager.Destroy();
+            NeuroGuideExperience.Destroy();
         }
 #endif
 
@@ -232,16 +185,10 @@ namespace gambit.neuroguide
     //-------------------------------//
     {
 
-        if(NeuroGuideManager.system != null && NeuroGuideManager.system.data.Count > 0)
-        {
-            for(int i = 0; i < NeuroGuideManager.system.data.Count; i++)
-            {
-                GameObject go = GameObject.Find( "Cube: " + NeuroGuideManager.system.data[ i ].name );
-                Destroy( go );
-            }
-        }
+        GameObject go = GameObject.Find( "Cube" );
+        Destroy( go );
 
-    } //END DestroyCubes
+     } //END DestroyCubes
 
     #endregion
 
