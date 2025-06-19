@@ -45,6 +45,9 @@ using UnityEngine.InputSystem;
 #endif
 
 using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 using UnityEngine;
 using System.Threading.Tasks;
 
@@ -68,6 +71,21 @@ namespace gambit.neuroguide
         #endregion
 
         #region PRIVATE - VARIABLES
+
+        /// <summary>
+        /// Thread that keeps a lookout for new UDP data incoming to our selected port
+        /// </summary>
+        private static Thread udpReceiveThread;
+
+        /// <summary>
+        /// The UDP client used to listen for UDP message on a seperate thread
+        /// </summary>
+        private static UdpClient udpClient;
+
+        /// <summary>
+        /// Is the UDP thread running?
+        /// </summary>
+        private static bool isThreadRunning = false;
 
         #endregion
 
@@ -127,6 +145,17 @@ namespace gambit.neuroguide
             /// Should we enable debug data on initialization, and then allow for keyboard input to debug input values? Press 'Up' on the keyboard to send a stream of reward=true values
             /// </summary>
             public bool enableDebugData = false;
+
+            /// <summary>
+            /// The address we want to listen to for UDP messages from the NeuroGuide hardware
+            /// We utilize the home address, so we're looking for local messages from this PC
+            /// </summary>
+            public string udpAddress = "127.0.0.1";
+
+            /// <summary>
+            /// UDP Port to listen for NeuroGuide updates on
+            /// </summary>
+            public int udpPort = 50000;
 
         } //END Options
 
@@ -188,7 +217,7 @@ namespace gambit.neuroguide
         /// <param name="OnSuccess">Callback action when the NeuroGuide system successfully initializes</param>
         /// <param name="OnFailed">Callback action that returns a string with an error message when initialization fails</param>
         //-------------------------------------//
-        public static async void Create(
+        public static void Create(
             Options options = null,
             Action<NeuroGuideSystem> OnSuccess = null,
             Action< string> OnFailed = null,
@@ -211,8 +240,12 @@ namespace gambit.neuroguide
             system.OnDataUpdate = OnDataUpdated;
             system.OnStateUpdate = OnStateUpdated;
 
-            //Connect to the NeuroGuide hardware to make sure we can see it
-            await CheckConnection();
+            //Start listening to the UDP port for data from the NeuroGuide hardware
+            StartUDPListener();
+
+            //Mark the system as initialized, so Update methods know we're ready
+            system.state = State.Initialized;
+            SendStateUpdatedMessage();
 
             //If we were unable to make a connection to the NeuroGuide hardware, we cannot continue
             if(system.state == State.NotInitialized)
@@ -220,8 +253,6 @@ namespace gambit.neuroguide
                 OnFailed?.Invoke( "NeuroGuideManager.cs Create() Unable to connect to NeuroGuide hardware. Unable to continue." );
                 return;
             }
-
-            InitializeData();
 
             //Access a variable of the singleton instance, this will ensure it is initialized in the hierarchy with a GameObject representation
             //Doing this makes sure that Unity Lifecycle methods like Update() will run
@@ -249,6 +280,8 @@ namespace gambit.neuroguide
                 return;
             }
 
+            StopUDPListener();
+
             Instance.Invoke( "FinishDestroy", .1f );
 
         } //END Destroy Method
@@ -271,50 +304,95 @@ namespace gambit.neuroguide
 
         #endregion
 
-        #region PRIVATE - CHECK CONNECTION
+        #region PRIVATE - START UDP LISTENER
 
         /// <summary>
-        /// Performs a check of the NeuroGuide hardware, if connected updates our State
+        /// Starts a UDP listener at a specific port
         /// </summary>
-        /// <returns></returns>
-        //----------------------------------------------------//
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async Task CheckConnection()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        //----------------------------------------------------//
+        //----------------------------------------------//
+        private static void StartUDPListener()
+        //----------------------------------------------//
         {
-            if( system == null )
-            {
-                Debug.LogError( "NeuroGuideManager.cs CheckConnection() passed in system object is null, unable to continue" );
-                
-            }
+            //Start a new thread outside of our main thread
+            udpReceiveThread = new Thread( new ThreadStart( ReceiveUDPData ) );
+            udpReceiveThread.IsBackground = true;
+            udpReceiveThread.Start();
+            isThreadRunning = true;
 
-            //Since we don't know anything about the NeuroGuide, let's just say we're connected
-            system.state = State.Initialized;
-
-            SendStateUpdatedMessage();
-
-        } //END CheckConnection Method
+        } //END StartUDPListener Method
 
         #endregion
 
-        #region PRIVATE - INITIALIZE DATA
+        #region PRIVATE - STOP UDP LISTENER
 
         /// <summary>
-        /// Starts a UDP connection to connect to a port
+        /// Stops the UDP thread and client
         /// </summary>
-        //---------------------------------------------------------------------//
-        private static void InitializeData()
-        //---------------------------------------------------------------------//
+        //----------------------------------------------//
+        private static void StopUDPListener()
+        //----------------------------------------------//
         {
+            isThreadRunning = false;
 
-            if( system == null )
+            if(udpReceiveThread != null && udpReceiveThread.IsAlive)
             {
-                Debug.LogError( "NeuroGuideManager.cs InitializeData() passed in system object is null, unable to continue" );
+                udpReceiveThread.Abort();
+            }
+            if(udpClient != null)
+            {
+                udpClient.Close();
+            }
+        } //END StopUDPListener Method
+
+        #endregion
+
+        #region PRIVATE - RECIEVE UDP DATA
+        
+        /// <summary>
+        /// Whenever the UDP thread recieves data, check what the reward state of the user is and let our listeners know
+        /// </summary>
+        //-------------------------------//
+        private static void ReceiveUDPData()
+        //-------------------------------//
+        {
+            if(system == null)
                 return;
+
+            udpClient = new UdpClient( system.options.udpPort );
+
+            while(isThreadRunning)
+            {
+                try
+                {
+                    IPEndPoint anyIP = new IPEndPoint( IPAddress.Parse( system.options.udpAddress ), system.options.udpPort );
+                    byte[ ] data = udpClient.Receive( ref anyIP );
+
+                    if(data.Length > 0)
+                    {
+                        bool rewardState = false;
+
+                        //1 = true, 0 = false
+                        if(data[ 0 ] == 1)
+                        {
+                            rewardState = true;
+                        }
+
+                        NeuroGuideData neuroGuideData = new NeuroGuideData
+                        {
+                            isRecievingReward = rewardState,
+                            timestamp = System.DateTime.Now
+                        };
+
+                        SendDataUpdatedMessage( neuroGuideData );
+                    }
+                }
+                catch(Exception e)
+                {
+                    Debug.LogError( "Error receiving UDP data: " + e.Message );
+                }
             }
 
-        } //END InitializeData
+        } //END ReceiveUDPData Method
 
         #endregion
 
