@@ -341,7 +341,6 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                Debug.Log( "Up pressed this frame" );
                 data.isRecievingReward = true;
                 SendDataUpdatedMessage( data );
             }
@@ -396,7 +395,9 @@ namespace gambit.neuroguide
         {
 
 #if !UNITY_INPUT
-            // --- UP ARROW ---
+            NeuroGuideData data = ScriptableObject.CreateInstance<NeuroGuideData>();
+
+            // --- UP ARROW PRESSED ---
             if(Input.GetKeyDown( KeyCode.UpArrow ))
             {
                 if(system.state != State.ReceivingData)
@@ -408,6 +409,18 @@ namespace gambit.neuroguide
                 data.isRecievingReward = true;
                 SendDataUpdatedMessage( data );
             }
+
+            // --- UP ARROW RELEASED ---
+            else if(Input.GetKeyUp( KeyCode.UpArrow ))
+            {
+                if(system.state != State.NoData)
+                {
+                    system.state = State.NoData;
+                    SendStateUpdatedMessage();
+                }
+            }
+
+            // --- DOWN ARROW PRESSED ---
             else if( Input.GetKeyDown( KeyCode.DownArrow ) )
             {
                 if(system.state != State.ReceivingData)
@@ -418,6 +431,16 @@ namespace gambit.neuroguide
 
                 data.isRecievingReward = false;
                 SendDataUpdatedMessage( data );
+            }
+
+            // --- DOWN ARROW RELEASED ---
+            else if(Input.GetKeyUp( KeyCode.DownArrow ))
+            {
+                if(system.state != State.NoData)
+                {
+                    system.state = State.NoData;
+                    SendStateUpdatedMessage();
+                }
             }
 #endif
 

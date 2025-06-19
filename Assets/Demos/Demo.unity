@@ -457,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logs: 1
   debug: 1
-  totalDurationInSeconds: 120
+  totalDurationInSeconds: 5
 --- !u!4 &1626458823
 Transform:
   m_ObjectHideFlags: 0
