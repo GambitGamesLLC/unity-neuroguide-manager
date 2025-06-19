@@ -307,7 +307,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
+            if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
             system.isInRewardState = data.isRecievingReward;
 
         } //END OnHardwareUpdate Method
