@@ -21,10 +21,10 @@ If no NeuroGuide is present, you can control the cubes using the Keyboard arrow 
 - Play the scene
 
 ## DEMO CONTROLS
-- `Enter Key` - Creates a NeuroGuideSystem and spawns cubes to match the data
-- `Delete Key` - Destroys the NeuroGuideSystem and any spawned cubes, afterwards the `Enter` key can be pressed again to spawn a new NeuroGuideSystem
-- `Up Key` - Tweens the debug value of each NeuroGuideData node to the max value, set by the public value in the NeuroGuideDemo component on the Demo GameObject
-- `Down Key` - Tweens the debug value of each NeuroGuideData node to the minimum value, set by the public value in the NeuroGuideDemo component on the Demo GameObject
+- `Enter Key` - Creates a NeuroGuideSystem and spawns cubes to match the data. When you hit 'Play' we automatically create one for you
+- `Delete Key` - Destroys the NeuroGuideSystem and NeuroGuideExperiencesystem, afterwards the `Enter` key can be pressed again to spawn a new NeuroGuideSystem and NeuroGuideExperienceSystem
+- `Up Key` - Simulates the user entering a "reward" state. The cube in the scene will begin to scale up.
+- `Down Key` - Simulates the user leaving the "reward" state. The cube in the scene will begin to scale down.
 
 -----
 
@@ -71,71 +71,131 @@ The primary class for this package is **`NeuroGuideManager.cs`**. It's a singlet
 
 ### ▶ Initialization & Usage
 
-To begin interacting with the headset, you must first initialize the manager.
+USAGE INSTRUCTIONS
+The package is built around a two-layer system:
 
-```csharp
+1.  NeuroGuideManager: A low-level singleton that connects directly to the NeuroGuide hardware and reports its state and whether the user is receiving a reward.  
+2.  NeuroGuideExperience: A higher-level singleton that uses the data from the NeuroGuideManager to track progress over a defined period. It accumulates progress when the user is in a "reward" state and decreases it when they are not. It then provides a normalized value (0-1) of this progress to any interactable objects.
+
+▶ Initialization & Usage
+Step 1: Initialize the Hardware Manager (NeuroGuideManager)
+First, initialize the NeuroGuideManager to connect to the hardware.
+
+```
+#if GAMBIT_NEUROGUIDE
 using gambit.neuroguide;
+#endif
+
 using UnityEngine;
 
-public class NeuroGuideExample : MonoBehaviour
+public class MyNeuroGuideController : MonoBehaviour
 {
     void Start()
     {
-        // Options for customizing the manager's behavior
-        var options = new NeuroGuideManager.Options
-        {
-            showDebugLogs = true,
-            enableDebugData = true,
-            debugNumberOfEntries = 10
-        };
-
-        // Create and initialize the NeuroGuide manager
+        // 1. Initialize the NeuroGuideManager, to start recieving hardware events
         NeuroGuideManager.Create(
-            options,
-            // OnSuccess: Called when the manager initializes successfully
-            (system) => {
-                Debug.Log("NeuroGuideManager created successfully! System data count: " + system.data.Count);
+            new NeuroGuideManager.Options()
+            {
+                showDebugLogs = true,
+                enableDebugData = true // Use keyboard simulation if no hardware is present
             },
-            // OnFailed: Called if initialization fails
+            // OnSuccess
+            (system) => {
+                Debug.Log("NeuroGuideManager created successfully!");
+                // 2. Once the manager is ready, create the experience
+                CreateExperience();
+            },
+            // OnFailed
             (error) => {
                 Debug.LogWarning("NeuroGuideManager failed to create: " + error);
             },
-            // OnDataUpdated: Called every time new data is received from the headset
-            (system) => {
-                // Access real-time data from the headset
-                foreach (var sensorData in system.data)
-                {
-                    Debug.Log($"Sensor {sensorData.sensorID}: Value = {sensorData.currentValue}");
-                }
+            // OnDataUpdate: Called when new data is received from the hardware
+            (data) => {
+                // This callback receives NeuroGuideData
+                Debug.Log("Is user in reward state? " + data.isRecievingReward);
             },
-            // OnStateUpdated: Called when the headset's connection state changes
-            (system, state) => {
+            // OnStateUpdate: Called when the connection state changes
+            (state) => {
                 Debug.Log("NeuroGuideManager state changed to: " + state);
             }
         );
     }
+    
+    // ... See next steps
+```
+
+Step 2: Create the Experience Tracker (NeuroGuideExperience)
+After the NeuroGuideManager is successfully created, you can create a NeuroGuideExperience to track progress.
+
+```
+// ... Continued from previous example
+
+    private void CreateExperience()
+    {
+        NeuroGuideExperience.Create(
+            new NeuroGuideExperience.Options()
+            {
+                showDebugLogs = true,
+                totalDurationInSeconds = 120f // The time in seconds to reach 100% progress
+            },
+            // OnSuccess
+            (system) => {
+                Debug.Log("NeuroGuideExperience created successfully!");
+            },
+            // OnError
+            (error) => {
+                Debug.LogWarning("NeuroGuideExperience failed to create: " + error);
+            }
+        );
+    }
+```
+
+Step 3: Make Your GameObjects Interactable
+Implement the INeuroGuideInteractable interface on any MonoBehaviour to make it react to experience updates. The OnDataUpdate method will be called automatically with the normalized (0-1) progress value from the NeuroGuideExperience.
+
+```
+#if GAMBIT_NEUROGUIDE
+using gambit.neuroguide;
+#endif
+
+using UnityEngine;
+
+public class ResponsiveCube : MonoBehaviour, INeuroGuideInteractable
+{
+    // This method is called by NeuroGuideExperience whenever the progress value changes.
+    public void OnDataUpdate(float normalizedValue)
+    {
+        // Scale the cube based on the user's progress
+        Debug.Log("Experience progress: " + normalizedValue);
+        transform.localScale = Vector3.one * normalizedValue;
+    }
+}
+```
+
+Step 4: Cleanup
+Always destroy the managers when you are done to clean up listeners and resources.
+
+```
+// ... Continued from previous example
 
     void OnDestroy()
     {
-        // Clean up the manager when you're done
+        // Destroy in reverse order of creation
+        NeuroGuideExperience.Destroy();
         NeuroGuideManager.Destroy();
     }
 }
 ```
 
-### 🔧 Public Options
+🔧 Public Options
+NeuroGuideManager.Options
+- showDebugLogs (bool): Enables or disables internal state logs in the Unity console.
+- enableDebugData (bool): Enables simulated data for testing without a headset. Allows keyboard input (Up/Down arrows) to simulate the reward state.
+  
+NeuroGuideExperience.Options
+- showDebugLogs (bool): Enables or disables experience-related logs.
+- totalDurationInSeconds (float): The total amount of time the user must be in the reward state to reach 100% progress (a normalized value of 1.0). Progress decreases when not in the reward state.
 
-You can customize the manager's behavior by passing an `Options` object during creation.
-
-  * `showDebugLogs`: (bool) Enables or disables internal state logs in the Unity console.
-  * `enableDebugData`: (bool) Enables simulated data for testing without a headset. Allows keyboard input (Up/Down arrows) to control debug values.
-  * `debugNumberOfEntries`: (int) If debug data is enabled, this is the number of randomized data nodes to generate.
-  * `debugRandomizeStartingValues`: (bool) If enabled, randomizes the start value between the 'min' and 'max' value, if disabled the starting value is 0.
-  * `debugMinCurrentValue`: (float) The minimum value for debug data tweens.
-  * `debugMaxCurrentValue`: (float) The maximum value for debug data tweens.
-  * `debugTweenDuration`: (float) The duration (in seconds) for the debug value tweens.
-  * `debugEaseType`: (DG.Tweening.Ease) The DOTween ease type to use for debug animations (requires DOTween).
-    
 -----
 
 ## DEPENDENCIES
