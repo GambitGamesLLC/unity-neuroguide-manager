@@ -75,6 +75,11 @@ namespace gambit.neuroguide
                 return;
             }
 
+            if(NeuroGuideManager.system.state != NeuroGuideManager.State.ReceivingData)
+            {
+                return;
+            }
+
             // If the total duration isn't set, do nothing to prevent division by zero.
             if(system.options.totalDurationInSeconds <= 0)
             {
@@ -227,6 +232,10 @@ namespace gambit.neuroguide
 
             StoreAllComponentsWithInterfaceIncludingInactive( system );
 
+            //Access a variable of the singleton instance, this will ensure it is initialized in the hierarchy with a GameObject representation
+            //Doing this makes sure that Unity Lifecycle methods like Update() will run
+            Instance.enabled = true;
+
             //We're done, call the OnSuccess callback
             OnSuccess?.Invoke( system );
 
@@ -298,14 +307,8 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if(data.isRecievingReward)
-            {
-                if( system.options.showDebugLogs )
-                {
-                    system.isInRewardState = data.isRecievingReward;
-                    Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
-                }
-            }
+            Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
+            system.isInRewardState = data.isRecievingReward;
 
         } //END OnHardwareUpdate Method
 

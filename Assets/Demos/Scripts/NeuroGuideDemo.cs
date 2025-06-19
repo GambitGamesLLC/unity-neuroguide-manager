@@ -39,27 +39,24 @@ namespace gambit.neuroguide
     /// </summary>
     public bool debug = true;
 
-        /// <summary>
-        /// How long should this experience last if the user were to be in a reward state (doesn't have to be consecutively), but their score to get towards the goal lowers when they are not in the reward state
-        /// </summary>
-        public float totalDurationInSeconds = 120;
+    /// <summary>
+    /// How long should this experience last if the user were to be in a reward state (doesn't have to be consecutively), but their score to get towards the goal lowers when they are not in the reward state
+    /// </summary>
+    public float totalDurationInSeconds = 5;
 
     #endregion
 
-        #region PUBLIC - START
+    #region PUBLIC - START
 
-        /// <summary>
-        /// Unity lifecycle method
-        /// </summary>
-        //----------------------------------//
+    /// <summary>
+    /// Unity lifecycle method
+    /// </summary>
+    //---------------------------------//
     public void Start()
-    //----------------------------------//
+    //---------------------------------//
     {
-        //Spawn cube to show progress for debugging
-        GameObject go = GameObject.CreatePrimitive( PrimitiveType.Cube );
-        go.name = "Cube";
-        go.transform.parent = gameObject.transform;
-        go.transform.localPosition = new Vector3( 0, 0, 0 );
+
+        CreateNeuroGuideManager();
 
     } //END Start Method
 
@@ -113,24 +110,34 @@ namespace gambit.neuroguide
     //---------------------------------------------//
     {
 
-        NeuroGuideManager.Create(
+        NeuroGuideManager.Create
+        (
+            //Create and pass in Options object
             new NeuroGuideManager.Options()
             {
                 showDebugLogs = logs,
                 enableDebugData = debug
             },
+
+            //OnSuccess
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
                 if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
 
                 CreateNeuroGuideExperience();
             },
+
+            //OnFailed
             ( string error ) => {
                 if( logs ) Debug.LogWarning( error );
             },
+
+            //OnDataUpdate
             (NeuroGuideData) =>
             {
                 //if( logs ) Debug.Log( "NeuroGuideDemo CreateNeuroGuideManager() Hardware Data updated ... data.isRecievingReward = " + data.isRecievingReward );
             },
+
+            //OnStateUpdate
             ( NeuroGuideManager.State state ) =>
             {
                 if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
@@ -142,11 +149,33 @@ namespace gambit.neuroguide
     private void CreateNeuroGuideExperience()
     //----------------------------------------------//
     {
-        NeuroGuideExperience.Options options = new NeuroGuideExperience.Options();
-        options.showDebugLogs = logs;
-        options.totalDurationInSeconds = totalDurationInSeconds;
+        NeuroGuideExperience.Create
+        (
+            //Create and Pass in Options object
+            new NeuroGuideExperience.Options()
+            {
+                showDebugLogs = logs,
+                totalDurationInSeconds = totalDurationInSeconds
+            }, 
 
-        NeuroGuideExperience.Create(); 
+            //OnSuccess
+            (NeuroGuideExperience.NeuroGuideExperienceSystem system)=> 
+            {
+                if( logs ) Debug.Log( "CreateNeuroGuideExperience() OnSuccess" );
+            },
+            
+            //OnError
+            (string error ) =>
+            {
+                if( logs ) Debug.Log( error );
+            },
+
+            //OnDataUpdated
+            (float data ) =>
+            {
+                if(logs) Debug.Log( data );
+            }
+        ); 
     
     } //END CreateNeuroGuideExperience Method
 
@@ -165,30 +194,18 @@ namespace gambit.neuroguide
 #if UNITY_INPUT
         if(Keyboard.current.deleteKey.wasPressedThisFrame)
         {
-            DestroyCubes();
             NeuroGuideManager.Destroy();
             NeuroGuideExperience.Destroy();
         }
 #else
         if( Input.GetKeyUp( KeyCode.Delete ) )
         {
-            DestroyCubes();
             NeuroGuideManager.Destroy();
             NeuroGuideExperience.Destroy();
         }
 #endif
 
     } //END DestroyOnDelete
-
-    //-------------------------------//
-    private void DestroyCubes()
-    //-------------------------------//
-    {
-
-        GameObject go = GameObject.Find( "Cube" );
-        Destroy( go );
-
-     } //END DestroyCubes
 
     #endregion
 

@@ -7,7 +7,7 @@ namespace gambit.neuroguide
     /// <summary>
     /// Stores data controlled by NeuroGuide hardware
     /// </summary>
-    public class NeuroGuideData : MonoBehaviour
+    public class NeuroGuideData : ScriptableObject
     {
         /// <summary>
         /// Is the user in the process of recieving a reward from the NeuroGear software?

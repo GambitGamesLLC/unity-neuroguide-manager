@@ -80,17 +80,17 @@ namespace gambit.neuroguide
         public void Update()
         //---------------------------//
         {
-
+            
             if(system == null)
             {
                 return;
             }
-
+            
             if(!system.options.enableDebugData)
             {
                 return;
             }
-
+            
             if(system.state == State.NotInitialized)
             {
                 return;
@@ -223,6 +223,10 @@ namespace gambit.neuroguide
 
             InitializeData();
 
+            //Access a variable of the singleton instance, this will ensure it is initialized in the hierarchy with a GameObject representation
+            //Doing this makes sure that Unity Lifecycle methods like Update() will run
+            Instance.enabled = true;
+
             //We're done, call the OnSuccess callback
             OnSuccess?.Invoke(system);
 
@@ -326,9 +330,9 @@ namespace gambit.neuroguide
 
 #if UNITY_INPUT
 
-            NeuroGuideData data = new NeuroGuideData();
+            NeuroGuideData data = ScriptableObject.CreateInstance<NeuroGuideData>();
 
-            // --- UP ARROW ---
+            // --- UP ARROW PRESSED ---
             if(Keyboard.current.upArrowKey.wasPressedThisFrame)
             {
                 if(system.state != State.ReceivingData)
@@ -337,9 +341,22 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
+                Debug.Log( "Up pressed this frame" );
                 data.isRecievingReward = true;
                 SendDataUpdatedMessage( data );
             }
+
+            // --- UP ARROW RELEASED ---
+            else if(Keyboard.current.upArrowKey.wasReleasedThisFrame)
+            {
+                if(system.state != State.NoData)
+                {
+                    system.state = State.NoData;
+                    SendStateUpdatedMessage();
+                }
+            }
+
+            // --- DOWN ARROW PRESSED ---
             else if(Keyboard.current.downArrowKey.wasPressedThisFrame)
             {
                 if(system.state != State.ReceivingData)
@@ -350,6 +367,16 @@ namespace gambit.neuroguide
 
                 data.isRecievingReward = false;
                 SendDataUpdatedMessage( data );
+            }
+
+            // --- DOWN ARROW RELEASED ---
+            else if(Keyboard.current.downArrowKey.wasReleasedThisFrame)
+            {
+                if(system.state != State.NoData)
+                {
+                    system.state = State.NoData;
+                    SendStateUpdatedMessage();
+                }
             }
 
 #endif
@@ -432,6 +459,7 @@ namespace gambit.neuroguide
                 return;
             }
 
+            //Debug.Log( "NeuroGuideManager.cs SendStateUpdatedMessage() state = " + system.state.ToString() );
             system.OnStateUpdate?.Invoke(system.state);
 
         } //END SendStateUpdatedMessage Method
