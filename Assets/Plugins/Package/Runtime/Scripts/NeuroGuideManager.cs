@@ -50,6 +50,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 #endregion
 
@@ -80,12 +81,35 @@ namespace gambit.neuroguide
         /// <summary>
         /// The UDP client used to listen for UDP message on a seperate thread
         /// </summary>
-        private static UdpClient udpClient;
+        private static UdpClient udpListenClient;
+
+        /// <summary>
+        /// The UDP client used to send messages for debugging purposes to the seperate thread
+        /// In reality we would listen to messages sent by other software
+        /// </summary>
+        private static UdpClient udpSendClient = new UdpClient();
 
         /// <summary>
         /// Is the UDP thread running?
         /// </summary>
         private static bool isThreadRunning = false;
+
+        /// <summary>
+        /// The queue holds onto the actions we want to perform
+        /// </summary>
+        private static readonly ConcurrentQueue<Action> _executionQueue = new ConcurrentQueue<Action>();
+
+        /// <summary>
+        /// The integer encoded into 8bit format and sent over UDP when debugging the hardware.
+        /// 1 = reward is true
+        /// </summary>
+        private static byte rewardOn = 1;
+
+        /// <summary>
+        /// The integer encoded into 8bit format and sent over UDP when debugging the hardware.
+        /// 0 = reward is false
+        /// </summary>
+        private static byte rewardOff = 0;
 
         #endregion
 
@@ -123,7 +147,28 @@ namespace gambit.neuroguide
 
 #endif
 
+            DequeueThread();
+
+
         } //END Update Method
+
+        #endregion
+
+        #region PUBLIC - ON DESTROY
+
+        /// <summary>
+        /// WHen this object is destroyed, clean up any threads, cororoutines, and listeners
+        /// </summary>
+        //--------------------------------//
+        protected override void OnDestroy()
+        //--------------------------------//
+        {
+            
+            StopUDPListener();
+            
+            base.OnDestroy();
+
+        } //END OnDestroy Method
 
         #endregion
 
@@ -282,6 +327,14 @@ namespace gambit.neuroguide
 
             StopUDPListener();
 
+            //Stop the UDP Sender used for debugging
+            if(udpSendClient != null)
+            {
+                // This will interrupt the blocking Receive call
+                udpSendClient.Close();
+                udpSendClient = null;
+            }
+
             Instance.Invoke( "FinishDestroy", .1f );
 
         } //END Destroy Method
@@ -334,14 +387,18 @@ namespace gambit.neuroguide
         {
             isThreadRunning = false;
 
+            if(udpListenClient != null)
+            {
+                // This will interrupt the blocking Receive call
+                udpListenClient.Close();
+            }
+
             if(udpReceiveThread != null && udpReceiveThread.IsAlive)
             {
-                udpReceiveThread.Abort();
+                // Wait for the thread to finish gracefully
+                udpReceiveThread.Join();
             }
-            if(udpClient != null)
-            {
-                udpClient.Close();
-            }
+
         } //END StopUDPListener Method
 
         #endregion
@@ -358,14 +415,14 @@ namespace gambit.neuroguide
             if(system == null)
                 return;
 
-            udpClient = new UdpClient( system.options.udpPort );
+            udpListenClient = new UdpClient( system.options.udpPort );
 
             while(isThreadRunning)
             {
                 try
                 {
                     IPEndPoint anyIP = new IPEndPoint( IPAddress.Parse( system.options.udpAddress ), system.options.udpPort );
-                    byte[ ] data = udpClient.Receive( ref anyIP );
+                    byte[ ] data = udpListenClient.Receive( ref anyIP );
 
                     if(data.Length > 0)
                     {
@@ -377,18 +434,37 @@ namespace gambit.neuroguide
                             rewardState = true;
                         }
 
-                        NeuroGuideData neuroGuideData = new NeuroGuideData
+                        // Enqueue the Unity-specific work to be run on the main thread
+                        ThreadEnqueue( () =>
                         {
-                            isRecievingReward = rewardState,
-                            timestamp = System.DateTime.Now
-                        };
+                            // This code now runs safely on the main thread
+                            system.state = State.ReceivingData;
+                            SendStateUpdatedMessage();
 
-                        SendDataUpdatedMessage( neuroGuideData );
+                            var neuroGuideData = ScriptableObject.CreateInstance<NeuroGuideData>();
+                            neuroGuideData.isRecievingReward = rewardState;
+                            neuroGuideData.timestamp = System.DateTime.Now;
+                            SendDataUpdatedMessage( neuroGuideData );
+                        } );
+
+                    }
+                }
+                catch(SocketException)
+                {
+                    // This exception is expected when the client is closed from another thread.
+                    // If we are shutting down, we just break out of the loop.
+                    //This prevents a scary error in the Unity console log when you close out of play mode
+                    if(!isThreadRunning)
+                    {
+                        break;
                     }
                 }
                 catch(Exception e)
                 {
-                    Debug.LogError( "Error receiving UDP data: " + e.Message );
+                    if(isThreadRunning)
+                    {
+                        Debug.LogError( "Error receiving UDP data: " + e.Message );
+                    }
                 }
             }
 
@@ -411,7 +487,7 @@ namespace gambit.neuroguide
             NeuroGuideData data = ScriptableObject.CreateInstance<NeuroGuideData>();
 
             // --- UP ARROW PRESSED ---
-            if(Keyboard.current.upArrowKey.wasPressedThisFrame)
+            if(Keyboard.current.upArrowKey.isPressed )
             {
                 if(system.state != State.ReceivingData)
                 {
@@ -419,8 +495,8 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                data.isRecievingReward = true;
-                SendDataUpdatedMessage( data );
+                //Debug.Log( "up pressed or held this frame" );
+                SendUDPData( rewardOn );
             }
 
             // --- UP ARROW RELEASED ---
@@ -434,7 +510,7 @@ namespace gambit.neuroguide
             }
 
             // --- DOWN ARROW PRESSED ---
-            else if(Keyboard.current.downArrowKey.wasPressedThisFrame)
+            else if(Keyboard.current.downArrowKey.isPressed )
             {
                 if(system.state != State.ReceivingData)
                 {
@@ -442,8 +518,7 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                data.isRecievingReward = false;
-                SendDataUpdatedMessage( data );
+                SendUDPData( rewardOff );
             }
 
             // --- DOWN ARROW RELEASED ---
@@ -484,8 +559,7 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                data.isRecievingReward = true;
-                SendDataUpdatedMessage( data );
+                SendUDPData( rewardOn );
             }
 
             // --- UP ARROW RELEASED ---
@@ -507,8 +581,7 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                data.isRecievingReward = false;
-                SendDataUpdatedMessage( data );
+                SendUDPData( rewardOff );
             }
 
             // --- DOWN ARROW RELEASED ---
@@ -523,6 +596,72 @@ namespace gambit.neuroguide
 #endif
 
         } //END HandleLegacyDebugInput Method
+
+        #endregion
+
+        #region PRIVATE - SEND UDP DATA
+
+        /// <summary>
+        /// Sends a byte via our UDP Sender client, to simulate the hardware sending out a byte of data
+        /// This will get picked up by our UDP listener client
+        /// </summary>
+        /// <param name="data"></param>
+        //----------------------------------------------//
+        private void SendUDPData( byte data )
+        //----------------------------------------------//
+        {
+            try
+            {
+                byte[ ] sendBytes = new byte[ ] { data };
+
+                //if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideManager.cs SendUDPData() data = " + data );
+
+                udpSendClient.Send( sendBytes, sendBytes.Length, new IPEndPoint( IPAddress.Parse( system.options.udpAddress ), system.options.udpPort ) );
+                
+            }
+            catch(System.Exception e)
+            {
+                Debug.LogError( "NeuroGuideManager SendUDPData() Error sending UDP data: " + e.Message );
+            }
+
+        } //END SendUDPData Method
+
+        #endregion
+
+        #region PRIVATE - HANDLE THREAD ENQUEUE
+
+        /// <summary>
+        /// Adds an action coming from the secondary thread to be dequeued on the main thread
+        /// </summary>
+        /// <param name="action"></param>
+        //----------------------------------------------------------//
+        private static void ThreadEnqueue( Action action )
+        //----------------------------------------------------------//
+        {
+
+            _executionQueue.Enqueue( action );
+
+        } //END ThreadEnqueue Method
+
+        #endregion
+
+        #region PRIVATE - HANDLE THREAD DEQUEUE
+
+        /// <summary>
+        /// Dequeue's the secondary thread, used to convert the data coming from the UDP messaging system into Unity objects
+        /// Called every Update()
+        /// </summary>
+        //-------------------------------------------//
+        private static void DequeueThread()
+        //-------------------------------------------//
+        {
+
+            while(_executionQueue.TryDequeue( out var action ))
+            {
+                action.Invoke();
+            }
+
+        } //END DequeueThread Method
 
         #endregion
 

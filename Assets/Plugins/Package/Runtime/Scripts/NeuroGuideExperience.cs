@@ -36,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static PlasticPipe.Server.MonitorStats;
 
 #endregion
 
@@ -64,7 +65,7 @@ namespace gambit.neuroguide
         #region PUBLIC - UPDATE
 
         /// <summary>
-        /// Unity lifecycle method
+        /// Unity lifecycle method, used to update the experience progress every time the hardware sends us an update
         /// </summary>
         //--------------------------------//
         public void Update()
@@ -86,12 +87,18 @@ namespace gambit.neuroguide
                 return;
             }
 
+            //If we do not have data to parse from the hardware, return early
+            if(system.currentData == null)
+            {
+                return;
+            }
+
             // Store the score before any changes to see if an update is needed.
             float previousScore = system.currentScore;
 
             // If in the reward state, add time. If not, subtract time.
             // Time.deltaTime ensures the change is frame-rate independent.
-            if(system.isInRewardState)
+            if(system.currentData.isRecievingReward)
             {
                 system.currentProgressInSeconds += Time.deltaTime;
             }
@@ -120,6 +127,9 @@ namespace gambit.neuroguide
                 }
 
             }
+
+            //Now that we've processed the data from the hardware, set our data object to null so we dont' reprocess it next Update!
+            system.currentData = null;
 
         } //END Update Method
 
@@ -181,9 +191,9 @@ namespace gambit.neuroguide
             public float currentProgressInSeconds = 0f;
 
             /// <summary>
-            /// On the last hardware update, was the player in a reward state?
+            /// The most up to date data that was sent in. If this is not null, we will process it in the Update() then set it to null
             /// </summary>
-            public bool isInRewardState = false;
+            public NeuroGuideData currentData;
 
         } //END NeuroGuideExperienceSystem Class
 
@@ -308,7 +318,7 @@ namespace gambit.neuroguide
             }
 
             if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
-            system.isInRewardState = data.isRecievingReward;
+            system.currentData = data;
 
         } //END OnHardwareUpdate Method
 

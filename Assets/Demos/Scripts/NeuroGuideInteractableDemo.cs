@@ -37,7 +37,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
         if(cube == null)
             return;
 
-        Debug.Log( normalizedValue );
+        //Debug.Log( normalizedValue );
 
 #if EXT_DOTWEEN
         Vector3 scale = new Vector3( normalizedValue, normalizedValue, normalizedValue );
