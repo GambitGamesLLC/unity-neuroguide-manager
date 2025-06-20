@@ -191,10 +191,13 @@ Always destroy the managers when you are done to clean up listeners and resource
 NeuroGuideManager.Options
 - showDebugLogs (bool): Enables or disables internal state logs in the Unity console.
 - enableDebugData (bool): Enables simulated data for testing without a headset. Allows keyboard input (Up/Down arrows) to simulate the reward state.
+- udpAddress (string): The IP address to listen to for UDP messages from the NeuroGuide hardware. Defaults to "127.0.0.1".
+- udpPort (int): The UDP port to listen for NeuroGuide updates on. Defaults to 50000.
   
 NeuroGuideExperience.Options
 - showDebugLogs (bool): Enables or disables experience-related logs.
 - totalDurationInSeconds (float): The total amount of time the user must be in the reward state to reach 100% progress (a normalized value of 1.0). Progress decreases when not in the reward state.
+
 
 -----
 
