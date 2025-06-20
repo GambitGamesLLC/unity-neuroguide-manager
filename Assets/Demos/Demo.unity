@@ -456,7 +456,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logs: 0
-  debug: 0
+  debug: 1
   totalDurationInSeconds: 2.5
 --- !u!4 &1626458823
 Transform:

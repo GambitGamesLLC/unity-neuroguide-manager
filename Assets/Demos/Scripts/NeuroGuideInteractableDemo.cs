@@ -1,7 +1,10 @@
 #region IMPORTS
 
-#if GAMBIT_NEUROGUIDE
+#if EXT_DOTWEEN
 using DG.Tweening;
+#endif
+
+#if GAMBIT_NEUROGUIDE
 using gambit.neuroguide;
 #endif
 
