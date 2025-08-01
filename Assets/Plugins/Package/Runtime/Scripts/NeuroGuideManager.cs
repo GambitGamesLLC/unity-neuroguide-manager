@@ -95,11 +95,6 @@ namespace gambit.neuroguide
         private static bool isThreadRunning = false;
 
         /// <summary>
-        /// The queue holds onto the actions we want to perform
-        /// </summary>
-        private static readonly ConcurrentQueue<Action> _executionQueue = new ConcurrentQueue<Action>();
-
-        /// <summary>
         /// The integer encoded into 8bit format and sent over UDP when debugging the hardware.
         /// 1 = reward is true
         /// </summary>
@@ -111,11 +106,23 @@ namespace gambit.neuroguide
         /// </summary>
         private static byte rewardOff = 0;
 
-
+        /// <summary>
+        /// A lock object to ensure thread-safe access to latestRewardState and hasNewData.
+        /// This prevents race conditions between the UDP receive thread (writer) and the main Unity thread (reader).
+        /// </summary>
         private static object rewardStateLock = new object();
 
+        /// <summary>
+        /// Stores the most recent reward state received from the UDP listener.
+        /// This variable is written to by the background UDP thread and read by the main thread.
+        /// Access is synchronized using rewardStateLock.
+        /// </summary>
         private static bool latestRewardState;
 
+        /// <summary>
+        /// A flag indicating that new data has arrived from the UDP thread and is ready to be processed by the main thread.
+        /// It is set to true by the UDP thread and reset to false by the main thread after processing.
+        /// </summary>
         private static bool hasNewData = false;
 
         #endregion
@@ -721,43 +728,6 @@ namespace gambit.neuroguide
             }
 
         } //END SendUDPData Method
-
-        #endregion
-
-        #region PRIVATE - HANDLE THREAD ENQUEUE
-
-        /// <summary>
-        /// Adds an action coming from the secondary thread to be dequeued on the main thread
-        /// </summary>
-        /// <param name="action"></param>
-        //----------------------------------------------------------//
-        private static void ThreadEnqueue( Action action )
-        //----------------------------------------------------------//
-        {
-
-            _executionQueue.Enqueue( action );
-
-        } //END ThreadEnqueue Method
-
-        #endregion
-
-        #region PRIVATE - HANDLE THREAD DEQUEUE
-
-        /// <summary>
-        /// Dequeue's the secondary thread, used to convert the data coming from the UDP messaging system into Unity objects
-        /// Called every Update()
-        /// </summary>
-        //-------------------------------------------//
-        private static void DequeueThread()
-        //-------------------------------------------//
-        {
-
-            while(_executionQueue.TryDequeue( out var action ))
-            {
-                action.Invoke();
-            }
-
-        } //END DequeueThread Method
 
         #endregion
 
