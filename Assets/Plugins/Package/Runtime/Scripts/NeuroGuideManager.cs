@@ -160,12 +160,11 @@ namespace gambit.neuroguide
 #endif
 
 #endif
-
-            //DequeueThread();
-
+            //Read data shared between the main and secondary threads
             bool rewardStateToProcess = false;
             bool processData = false;
 
+            //Enter the locked if its available (not being used by the udp thread)
             lock(rewardStateLock)
             {
                 if(hasNewData)
@@ -178,11 +177,18 @@ namespace gambit.neuroguide
 
             if(processData)
             {
-                system.state = State.ReceivingData;
-                SendStateUpdatedMessage();
+                if(system.state != State.NoData)
+                {
+                    if(system.state != State.ReceivingData)
+                    {
+                        system.state = State.ReceivingData;
+                        SendStateUpdatedMessage();
+                    }
 
-                Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardStateToProcess, DateTime.Now );
-                SendDataUpdatedMessage( neuroGuideData );
+                    Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardStateToProcess, DateTime.Now );
+                    SendDataUpdatedMessage( neuroGuideData );
+                }
+                
             }
 
         } //END Update Method
