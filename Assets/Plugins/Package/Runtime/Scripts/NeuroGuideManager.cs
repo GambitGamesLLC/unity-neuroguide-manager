@@ -111,6 +111,13 @@ namespace gambit.neuroguide
         /// </summary>
         private static byte rewardOff = 0;
 
+
+        private static object rewardStateLock = new object();
+
+        private static bool latestRewardState;
+
+        private static bool hasNewData = false;
+
         #endregion
 
         #region PUBLIC - UPDATE
@@ -147,10 +154,64 @@ namespace gambit.neuroguide
 
 #endif
 
-            DequeueThread();
+            //DequeueThread();
 
+            bool rewardStateToProcess = false;
+            bool processData = false;
+
+            lock(rewardStateLock)
+            {
+                if(hasNewData)
+                {
+                    rewardStateToProcess = latestRewardState;
+                    hasNewData = false;
+                    processData = true;
+                }
+            }
+
+            if(processData)
+            {
+                system.state = State.ReceivingData;
+                SendStateUpdatedMessage();
+
+                Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardStateToProcess, DateTime.Now );
+                SendDataUpdatedMessage( neuroGuideData );
+            }
 
         } //END Update Method
+
+        #endregion
+
+        #region PRIVATE - PROCESS UDP DATA ON MAIN THREAD
+
+        /// <summary>
+        /// Process the UDP data on the main thread instead of in the background thread.
+        /// Since the main and background threads are synced at different rates, we could potentially
+        /// have a lot of extra delegate callbacks occur than what we could reasonably process and clean up.
+        /// </summary>
+        /// <param name="data"></param>
+        //-----------------------------------------------------------------------//
+        private static void ProcessUdpDataOnMainThread( byte[ ] data )
+        //-----------------------------------------------------------------------//
+        {
+            if(system == null || data == null || data.Length == 0)
+            {
+                return;
+            }
+
+            bool rewardState = (data[ 0 ] == 1);
+
+            // This code now runs safely on the main thread
+            if( system.state != State.ReceivingData )
+            {
+                system.state = State.ReceivingData;
+                SendStateUpdatedMessage();
+            }
+            
+            Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardState, DateTime.Now );
+            SendDataUpdatedMessage( neuroGuideData );
+
+        } //END ProcessUdpDataOnMainThread Method
 
         #endregion
 
@@ -357,6 +418,22 @@ namespace gambit.neuroguide
 
         #endregion
 
+        #region PUBLIC - ON APPLICATION QUIT
+
+        /// <summary>
+        /// Unity lifecycle method, used to clean up threads and unmanagement memory when application quits
+        /// </summary>
+        //---------------------------------------------------//
+        protected override void OnApplicationQuit()
+        //---------------------------------------------------//
+        {
+            Destroy();
+            base.OnApplicationQuit();
+
+        } //END OnApplicationQuit Method
+
+        #endregion
+
         #region PRIVATE - START UDP LISTENER
 
         /// <summary>
@@ -366,6 +443,27 @@ namespace gambit.neuroguide
         private static void StartUDPListener()
         //----------------------------------------------//
         {
+            // First, stop any potential existing listener to ensure a clean state
+            StopUDPListener();
+
+            // Perform a null check on system before proceeding
+            if(system == null)
+            {
+                Debug.LogError( "NeuroGuideManager.cs StartUDPListener() called with null system. Unable to continue" );
+                return;
+            }
+
+            try
+            {
+                // Create the UDP client on the main thread, before the background thread starts
+                udpListenClient = new UdpClient( system.options.udpPort );
+            }
+            catch(Exception e)
+            {
+                Debug.LogError( "NeuroGuideManager.cs StartUDPListener() failed to create UdpClient: " + e.ToString() );
+                return;
+            }
+
             //Start a new thread outside of our main thread
             udpReceiveThread = new Thread( new ThreadStart( ReceiveUDPData ) );
             udpReceiveThread.IsBackground = true;
@@ -391,6 +489,7 @@ namespace gambit.neuroguide
             {
                 // This will interrupt the blocking Receive call
                 udpListenClient.Close();
+                udpListenClient = null;
             }
 
             if(udpReceiveThread != null && udpReceiveThread.IsAlive)
@@ -415,41 +514,40 @@ namespace gambit.neuroguide
             if(system == null)
                 return;
 
-            udpListenClient = new UdpClient( system.options.udpPort );
-
             while(isThreadRunning)
             {
                 try
                 {
+                    if(system == null )
+                    {
+                        Debug.Log( "NeuroGuideManager.cs RecieveUDPData() system is null, calling break()" );
+                        break;
+                    }
+
+                    if( system != null && system.options == null )
+                    {
+                        Debug.Log( "NeuroGuideManager.cs RecieveUDPData() system.options is null, calling break()" );
+                        break;
+                    }
+
+                    if( udpListenClient == null )
+                    {
+                        Debug.Log( "NeuroGuideManager.cs RecieveUDPData() udpListenClient is null, calling break()" );
+                        break;
+                    }
+
                     IPEndPoint anyIP = new IPEndPoint( IPAddress.Parse( system.options.udpAddress ), system.options.udpPort );
                     byte[ ] data = udpListenClient.Receive( ref anyIP );
 
                     if(data.Length > 0)
                     {
-                        bool rewardState = false;
-
-                        //1 = true, 0 = false
-                        if(data[ 0 ] == 1)
+                        lock(rewardStateLock)
                         {
-                            rewardState = true;
+                            latestRewardState = (data[ 0 ] == 1);
+                            hasNewData = true;
                         }
-
-                        // Enqueue the Unity-specific work to be run on the main thread
-                        ThreadEnqueue( () =>
-                        {
-                            // This code now runs safely on the main thread
-                            system.state = State.ReceivingData;
-                            SendStateUpdatedMessage();
-
-                            //Generate a struct with data that is pass by value to our action delegate
-                            //Primary benefit over a ScriptableObject is that the struct exists on the heap
-                            //and will be automatically cleaned up without a risk of a memory leak.
-                            //Our struct is also nullable, allowing us to use the HasValue() function to check if its null
-                            Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardState, DateTime.Now );
-                            SendDataUpdatedMessage( neuroGuideData );
-                        } );
-
                     }
+
                 }
                 catch(SocketException)
                 {
