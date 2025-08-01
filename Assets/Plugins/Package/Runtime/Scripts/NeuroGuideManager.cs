@@ -243,7 +243,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// Unity action to call when the NeuroGuide data has been updated
             /// </summary>
-            public Action<NeuroGuideData> OnDataUpdate;
+            public Action<NeuroGuideData?> OnDataUpdate;
 
             /// <summary>
             /// Unity action to call when the hardware state has changed
@@ -266,7 +266,7 @@ namespace gambit.neuroguide
             Options options = null,
             Action<NeuroGuideSystem> OnSuccess = null,
             Action< string> OnFailed = null,
-            Action<NeuroGuideData> OnDataUpdated = null,
+            Action<NeuroGuideData?> OnDataUpdated = null,
             Action<State> OnStateUpdated = null)
         //-------------------------------------//
         {
@@ -441,9 +441,11 @@ namespace gambit.neuroguide
                             system.state = State.ReceivingData;
                             SendStateUpdatedMessage();
 
-                            var neuroGuideData = ScriptableObject.CreateInstance<NeuroGuideData>();
-                            neuroGuideData.isRecievingReward = rewardState;
-                            neuroGuideData.timestamp = System.DateTime.Now;
+                            //Generate a struct with data that is pass by value to our action delegate
+                            //Primary benefit over a ScriptableObject is that the struct exists on the heap
+                            //and will be automatically cleaned up without a risk of a memory leak.
+                            //Our struct is also nullable, allowing us to use the HasValue() function to check if its null
+                            Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardState, DateTime.Now );
                             SendDataUpdatedMessage( neuroGuideData );
                         } );
 
@@ -483,8 +485,6 @@ namespace gambit.neuroguide
         {
 
 #if UNITY_INPUT
-
-            NeuroGuideData data = ScriptableObject.CreateInstance<NeuroGuideData>();
 
             // --- UP ARROW PRESSED ---
             if(Keyboard.current.upArrowKey.isPressed )
@@ -548,8 +548,6 @@ namespace gambit.neuroguide
         {
 
 #if !UNITY_INPUT
-            NeuroGuideData data = ScriptableObject.CreateInstance<NeuroGuideData>();
-
             // --- UP ARROW PRESSED ---
             if(Input.GetKeyDown( KeyCode.UpArrow ))
             {
@@ -671,7 +669,7 @@ namespace gambit.neuroguide
         /// Sends a message out to any listeners via the Unity Action<> system
         /// </summary>
         //---------------------------------------------------//
-        private static void SendDataUpdatedMessage( NeuroGuideData data )
+        private static void SendDataUpdatedMessage( NeuroGuideData? data )
         //---------------------------------------------------//
         {
             if(system == null )

@@ -87,7 +87,7 @@ namespace gambit.neuroguide
             }
 
             //If we do not have data to parse from the hardware, return early
-            if(system.currentData == null)
+            if( system.currentData.HasValue == false )
             {
                 return;
             }
@@ -97,7 +97,7 @@ namespace gambit.neuroguide
 
             // If in the reward state, add time. If not, subtract time.
             // Time.deltaTime ensures the change is frame-rate independent.
-            if(system.currentData.isRecievingReward)
+            if(system.currentData.Value.isRecievingReward)
             {
                 system.currentProgressInSeconds += Time.deltaTime;
             }
@@ -192,7 +192,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// The most up to date data that was sent in. If this is not null, we will process it in the Update() then set it to null
             /// </summary>
-            public NeuroGuideData currentData;
+            public NeuroGuideData? currentData;
 
         } //END NeuroGuideExperienceSystem Class
 
@@ -302,11 +302,16 @@ namespace gambit.neuroguide
         /// </summary>
         /// <param name="data"></param>
         //---------------------------------------------------------------//
-        private static void OnHardwareUpdate( NeuroGuideData data )
+        private static void OnHardwareUpdate( NeuroGuideData? data )
         //---------------------------------------------------------------//
         {
 
             if(data == null)
+            {
+                return;
+            }
+
+            if(data.HasValue == false )
             {
                 return;
             }
@@ -316,7 +321,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.isRecievingReward );
+            if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.Value.isRecievingReward );
             system.currentData = data;
 
         } //END OnHardwareUpdate Method
