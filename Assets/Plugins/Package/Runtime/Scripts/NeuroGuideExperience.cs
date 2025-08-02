@@ -36,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering.VirtualTexturing;
 
 #endregion
 
@@ -92,6 +93,23 @@ namespace gambit.neuroguide
                 return;
             }
 
+            //Store a flag, if set to true then later in this function we'll send a message to all INeuroGuideInteractable
+            //classes to let them know the isRecievingReward state has changed
+            bool isRecievingRewardChanged = false;
+
+            //If the previousData is null (so this is our first piece of data),
+            //then the state has changed
+            if(system.previousData.HasValue == false)
+            {
+                isRecievingRewardChanged = true;
+            }
+            //Of if the previous 'isRecievingReward' is different than the current data
+            //then the state has changed
+            else if(system.previousData.Value.isRecievingReward != system.currentData.Value.isRecievingReward)
+            {
+                isRecievingRewardChanged = true;
+            }
+
             // Store the score before any changes to see if an update is needed.
             float previousScore = system.currentScore;
 
@@ -116,16 +134,26 @@ namespace gambit.neuroguide
             // This check prevents the event from firing unnecessarily every single frame.
             if(system.currentScore != previousScore)
             {
-                //Let any interactables know about the new score
+                
                 if(system.interactables != null)
                 {
                     for(int i = 0; i < system.interactables.Count; i++)
                     {
+                        //If the isRecievingReward changed from true to false, or false to true, then let the interactables know
+                        if(isRecievingRewardChanged)
+                        {
+                            system.interactables[ i ].OnRecievingRewardChanged( system.currentData.Value.isRecievingReward );
+                        }
+
+                        //Let any interactables know about the new score
                         system.interactables[ i ].OnDataUpdate( system.currentScore );
                     }
                 }
 
             }
+
+            //Store our currentData as our previousData
+            system.previousData = system.currentData;
 
             //Now that we've processed the data from the hardware, set our data object to null so we dont' reprocess it next Update!
             system.currentData = null;
@@ -193,6 +221,11 @@ namespace gambit.neuroguide
             /// The most up to date data that was sent in. If this is not null, we will process it in the Update() then set it to null
             /// </summary>
             public NeuroGuideData? currentData;
+
+            /// <summary>
+            /// The previous data update, If this is not null, we will check to see if the currentData has a different isRecievingReward state and let our INeuroGuideInteractables know about the change
+            /// </summary>
+            public NeuroGuideData? previousData;
 
         } //END NeuroGuideExperienceSystem Class
 
@@ -321,7 +354,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.Value.isRecievingReward );
+            //if( system.options.showDebugLogs ) Debug.Log( "NeuroGuideExperience.cs OnHardwareUpdate() isRecievingReward = " + data.Value.isRecievingReward );
             system.currentData = data;
 
         } //END OnHardwareUpdate Method

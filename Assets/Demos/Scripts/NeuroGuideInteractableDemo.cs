@@ -27,6 +27,22 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
 
     #endregion
 
+    #region PUBLIC - ON RECIEVING REWARD UPDATE
+
+    /// <summary>
+    /// Called when the user start or stops recieving a reward
+    /// </summary>
+    /// <param name="isRecievingReward">Is the user recieving a reward?</param>
+    //------------------------------------------------------------------------------------------//
+    public void OnRecievingRewardChanged( bool isRecievingReward )
+    //------------------------------------------------------------------------------------------//
+    {
+        Debug.Log( "NeuroGuideInteractableDemo.cs OnRecievingRewardChanged() state = " + isRecievingReward.ToString() );
+
+    } //END OnRecievingRewardChanged Method
+
+    #endregion
+
     #region PUBLIC - ON DATA UPDATE
 
     /// <summary>

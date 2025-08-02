@@ -14,6 +14,11 @@ namespace gambit.neuroguide
     /// </summary>
     public interface INeuroGuideInteractable
     {
+        /// <summary>
+        /// Called when the user starts or stops recieving a reward from the NeuroGuide hardware
+        /// </summary>
+        /// <param name="isRecievingReward">Is the user currently recieving a reward?</param>
+        void OnRecievingRewardChanged( bool isRecievingReward );
 
         /// <summary>
         /// Called 60 times a second by the NeuroGuideExperience with the latest normalized value of how far the user is from reaching the end goal of the experience
