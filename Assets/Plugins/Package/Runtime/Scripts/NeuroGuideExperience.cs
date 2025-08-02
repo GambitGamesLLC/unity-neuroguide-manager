@@ -60,6 +60,43 @@ namespace gambit.neuroguide
 
         #region PRIVATE - VARIABLES
 
+        /// <summary>
+        /// The score variable from the previous update
+        /// </summary>
+        private static float previousScore;
+
+        //Store a flag, if set to true then later during Update() we'll send a message to all INeuroGuideInteractable
+        //classes to let them know the isRecievingReward state has changed
+        private static bool isRecievingRewardChanged = false;
+
+        /// <summary>
+        /// Flag set after we fall below the threshold value, 
+        /// used to prevent the OnAboveThreshold callback for the length of time set via the preventThresholdPassedLength value.
+        /// </summary>
+        private static bool preventThresholdPassed;
+
+        /// <summary>
+        /// Used to prevent how long we should wait before we call OnAboveThreshold,
+        /// after we get our score above the threshold value, then fall back below.
+        /// This counter float has the DeltaTime variable added to it each Update()
+        /// </summary>
+        private static float preventThresholdPassedTimer = 0f;
+
+        /// <summary>
+        /// Has the score passed the threshold value?
+        /// </summary>
+        private static bool thresholdPassed;
+
+        /// <summary>
+        /// Callback delegate called when our score goes above the threshold and enough time has passed
+        /// </summary>
+        private static Action OnAboveThreshold;
+
+        /// <summary>
+        /// Callback delegate called when our score goes below the threshold
+        /// </summary>
+        private static Action OnBelowThreshold;
+
         #endregion
 
         #region PUBLIC - UPDATE
@@ -71,47 +108,75 @@ namespace gambit.neuroguide
         public void Update()
         //--------------------------------//
         {
-            if(system == null)
+            if( ShouldUpdateBePrevented())
             {
                 return;
             }
 
+            DetermineCurrentScore();
+
+            CheckIfScoreIsAboveThreshold();
+
+            CheckIfOnRecievingRewardHasChanged();
+
+            SendMessagesToInteractables();
+
+            StorePreviousData();
+
+        } //END Update Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - CHECK IF UPDATE SHOULD BE PREVENTED
+
+        /// <summary>
+        /// Checks for null references and missing dependencies
+        /// </summary>
+        /// <returns></returns>
+        //------------------------------------------------------------//
+        private static bool ShouldUpdateBePrevented()
+        //------------------------------------------------------------//
+        {
+            if(system == null)
+            {
+                return true;
+            }
+
             if(NeuroGuideManager.system.state != NeuroGuideManager.State.ReceivingData)
             {
-                return;
+                return true;
             }
 
             // If the total duration isn't set, do nothing to prevent division by zero.
             if(system.options.totalDurationInSeconds <= 0)
             {
-                return;
+                return true;
             }
 
             //If we do not have data to parse from the hardware, return early
-            if( system.currentData.HasValue == false )
+            if(system.currentData.HasValue == false)
             {
-                return;
+                return true;
             }
 
-            //Store a flag, if set to true then later in this function we'll send a message to all INeuroGuideInteractable
-            //classes to let them know the isRecievingReward state has changed
-            bool isRecievingRewardChanged = false;
+            return false;
 
-            //If the previousData is null (so this is our first piece of data),
-            //then the state has changed
-            if(system.previousData.HasValue == false)
-            {
-                isRecievingRewardChanged = true;
-            }
-            //Of if the previous 'isRecievingReward' is different than the current data
-            //then the state has changed
-            else if(system.previousData.Value.isRecievingReward != system.currentData.Value.isRecievingReward)
-            {
-                isRecievingRewardChanged = true;
-            }
+        } //END ShouldUpdateBePrevented Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - DETERMINE CURRENT SCORE
+
+        /// <summary>
+        /// Calculates the current score for the experience
+        /// </summary>
+        //------------------------------------------------------//
+        private static void DetermineCurrentScore()
+        //------------------------------------------------------//
+        {
 
             // Store the score before any changes to see if an update is needed.
-            float previousScore = system.currentScore;
+            previousScore = system.currentScore;
 
             // If in the reward state, add time. If not, subtract time.
             // Time.deltaTime ensures the change is frame-rate independent.
@@ -130,11 +195,77 @@ namespace gambit.neuroguide
             // Calculate the new normalized score.
             system.currentScore = system.currentProgressInSeconds / system.options.totalDurationInSeconds;
 
+
+        } //END DetermineCurrentScore Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - CHECK IF SCORE IS ABOVE THRESHOLD
+
+        /// <summary>
+        /// If the score is above the threshold, set a flag
+        /// </summary>
+        //------------------------------------------------------------//
+        private static void CheckIfScoreIsAboveThreshold()
+        //------------------------------------------------------------//
+        {
+
+            if(system.currentScore > system.options.threshold)
+            {
+
+            }
+
+        } //END CheckIfScoreIsAboveThreshold Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - CHECK IF 'ON RECIEVING REWARD' HAS CHANGED
+
+        /// <summary>
+        /// During Update, we check if we've changed states 
+        /// between recieving or not recieving a reward, 
+        /// let our callbacks and INeuroGuideInteractables know
+        /// </summary>
+        //-----------------------------------------------------------//
+        private static void CheckIfOnRecievingRewardHasChanged()
+        //-----------------------------------------------------------//
+        {
+
+            //Reset the flag for this update
+            isRecievingRewardChanged = false;
+
+            //If the previousData is null (so this is our first piece of data),
+            //then the state has changed
+            if(system.previousData.HasValue == false)
+            {
+                isRecievingRewardChanged = true;
+            }
+            //Of if the previous 'isRecievingReward' is different than the current data
+            //then the state has changed
+            else if(system.previousData.Value.isRecievingReward != system.currentData.Value.isRecievingReward)
+            {
+                isRecievingRewardChanged = true;
+            }
+
+        } //END CheckIfOnRecievingRewardHasChanged Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - SEND MESSAGES TO INTERACTABLES
+
+        /// <summary>
+        /// Messages interactables based on the current score
+        /// </summary>
+        //-------------------------------------------//
+        private static void SendMessagesToInteractables()
+        //-------------------------------------------//
+        {
+
             // If the score has changed, invoke the event to notify other parts of the experience.
             // This check prevents the event from firing unnecessarily every single frame.
             if(system.currentScore != previousScore)
             {
-                
+
                 if(system.interactables != null)
                 {
                     for(int i = 0; i < system.interactables.Count; i++)
@@ -152,13 +283,27 @@ namespace gambit.neuroguide
 
             }
 
+        } //END UpdateInteractables Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - STORE PREVIOUS DATA
+
+        /// <summary>
+        /// Stores the current data as the previous, then sets our current data as empty, setting us up for the next Update()
+        /// </summary>
+        //-------------------------------------------//
+        private static void StorePreviousData()
+        //-------------------------------------------//
+        {
+
             //Store our currentData as our previousData
             system.previousData = system.currentData;
 
             //Now that we've processed the data from the hardware, set our data object to null so we dont' reprocess it next Update!
             system.currentData = null;
 
-        } //END Update Method
+        } //END StorePreviousData Method
 
         #endregion
 
@@ -182,7 +327,20 @@ namespace gambit.neuroguide
             /// <summary>
             /// How long the experience should take to reach the final state. Whenever the user is in the 'reward' state we count towards this, and when they leave the success state we move away from this.
             /// </summary>
-            public float totalDurationInSeconds = 120f; 
+            public float totalDurationInSeconds = 120f;
+
+            /// <summary>
+            /// How far into the experience should the score be before it passes the threshold, causing the OnAboveThreshold to be called?
+            /// If the score goes back below this value, we call OnBelowThreshold
+            /// </summary>
+            public float threshold = .9f;
+
+            /// <summary>
+            /// How long we want to prevent the OnAboveThreshold Action callback from being called
+            /// after first being above the threshold, then falling below the threshold value?
+            /// This prevents OnAboveThreshold callback from being called until the timer runs out
+            /// </summary>
+            private static float preventThresholdPassedLength = 2f;
 
         } //END Options Class
 
