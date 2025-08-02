@@ -117,6 +117,8 @@ namespace gambit.neuroguide
 
             CheckIfScoreIsAboveThreshold();
 
+            CheckIfScoreIsBelowThreshold();
+
             CheckIfOnRecievingRewardHasChanged();
 
             SendMessagesToInteractables();
@@ -203,7 +205,7 @@ namespace gambit.neuroguide
         #region PRIVATE - UPDATE - CHECK IF SCORE IS ABOVE THRESHOLD
 
         /// <summary>
-        /// If the score is above the threshold, set a flag
+        /// If the score is above the threshold, send a OnAboveThreshold callback
         /// </summary>
         //------------------------------------------------------------//
         private static void CheckIfScoreIsAboveThreshold()
@@ -212,10 +214,34 @@ namespace gambit.neuroguide
 
             if(system.currentScore > system.options.threshold)
             {
+                if(preventThresholdPassed)
+                {
 
+                }
             }
 
         } //END CheckIfScoreIsAboveThreshold Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - CHECK IF SCORE IS BELOW THRESHOLD
+
+        /// <summary>
+        /// If the score is below the threshold after being above the threshold, 
+        /// run a timer that prevent the OnAboveThreshold callback from being called until the timer is complete
+        /// </summary>
+        //------------------------------------------------------------//
+        private static void CheckIfScoreIsBelowThreshold()
+        //------------------------------------------------------------//
+        {
+
+            //If below the threshold
+            if(system.currentScore < system.options.threshold)
+            {
+
+            }
+
+        } //END CheckIfScoreIsBelowThreshold Method
 
         #endregion
 
