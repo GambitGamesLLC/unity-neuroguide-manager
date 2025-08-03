@@ -27,6 +27,38 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
 
     #endregion
 
+    #region PUBLIC - ON ABOVE THRESHOLD
+
+    /// <summary>
+    /// Called when the score goes above the threshold.
+    /// Once the score falls below the threshold, 
+    /// we wait for a timer to complete before we can call this again when we go above the threshold
+    /// </summary>
+    //----------------------------------//
+    public void OnAboveThreshold()
+    //----------------------------------//
+    {
+        Debug.Log( "OnAboveThreshold" );
+
+    } //END OnAboveThreshold
+
+    #endregion
+
+    #region PUBLIC - ON BELOW THRESHOLD
+
+    /// <summary>
+    /// Called when the score goes above the threshold, then falls back below it
+    /// </summary>
+    //--------------------------------//
+    public void OnBelowThreshold()
+    //--------------------------------//
+    {
+        Debug.Log( "OnBelowThreshold" );
+    
+    } //END OnBelowThreshold Method
+
+    #endregion
+
     #region PUBLIC - ON RECIEVING REWARD UPDATE
 
     /// <summary>
@@ -37,7 +69,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
     public void OnRecievingRewardChanged( bool isRecievingReward )
     //------------------------------------------------------------------------------------------//
     {
-        Debug.Log( "NeuroGuideInteractableDemo.cs OnRecievingRewardChanged() state = " + isRecievingReward.ToString() );
+        //Debug.Log( "NeuroGuideInteractableDemo.cs OnRecievingRewardChanged() state = " + isRecievingReward.ToString() );
 
     } //END OnRecievingRewardChanged Method
 

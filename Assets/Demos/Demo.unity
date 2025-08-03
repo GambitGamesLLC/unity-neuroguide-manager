@@ -458,6 +458,8 @@ MonoBehaviour:
   logs: 1
   debug: 1
   totalDurationInSeconds: 2.5
+  threshold: 0.9
+  preventThresholdPassedLength: 5
 --- !u!4 &1626458823
 Transform:
   m_ObjectHideFlags: 0

@@ -44,6 +44,16 @@ namespace gambit.neuroguide
     /// </summary>
     public float totalDurationInSeconds = 5;
 
+    /// <summary>
+    /// What should the score be before we call our OnAboveThreshold and OnBelowThreshold callbacks?
+    /// </summary>
+    public float threshold = 0.9f;
+
+    /// <summary>
+    /// How long should we prevent the OnAboveThreshold callback? This happens after getting our score above the threshold, then falling below the threshold.
+    /// </summary>
+    public float preventThresholdPassedLength = 2f;
+
     #endregion
 
     #region PUBLIC - START
@@ -121,7 +131,7 @@ namespace gambit.neuroguide
 
             //OnSuccess
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
-                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
+                //if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
 
                 CreateNeuroGuideExperience();
             },
@@ -140,7 +150,7 @@ namespace gambit.neuroguide
             //OnStateUpdate
             ( NeuroGuideManager.State state ) =>
             {
-                if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
+                //if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() State changed to " + state.ToString() );
             } );
 
     } //END CreateNeuroGuideManager Method
@@ -155,13 +165,15 @@ namespace gambit.neuroguide
             new NeuroGuideExperience.Options()
             {
                 showDebugLogs = logs,
-                totalDurationInSeconds = totalDurationInSeconds
+                totalDurationInSeconds = totalDurationInSeconds,
+                threshold = threshold,
+                preventThresholdPassedLength = preventThresholdPassedLength
             }, 
 
             //OnSuccess
             (NeuroGuideExperience.NeuroGuideExperienceSystem system)=> 
             {
-                if( logs ) Debug.Log( "CreateNeuroGuideExperience() OnSuccess" );
+                //if( logs ) Debug.Log( "CreateNeuroGuideExperience() OnSuccess" );
             },
             
             //OnError

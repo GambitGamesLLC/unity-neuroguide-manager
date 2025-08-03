@@ -15,6 +15,19 @@ namespace gambit.neuroguide
     public interface INeuroGuideInteractable
     {
         /// <summary>
+        /// Called when the user gets their score above the threshold value in the experience.
+        /// When this happens, this callback will be prevented until the user falls back below the threshold
+        /// and a set amount of time has passed, configurable in the NeuroGuideExperience Options object
+        /// </summary>
+        void OnAboveThreshold();
+
+        /// <summary>
+        /// Called when the user gets their score above the threshold value in the experience, then
+        /// the score falls below the threshold
+        /// </summary>
+        void OnBelowThreshold();
+
+        /// <summary>
         /// Called when the user starts or stops recieving a reward from the NeuroGuide hardware
         /// </summary>
         /// <param name="isRecievingReward">Is the user currently recieving a reward?</param>
