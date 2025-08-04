@@ -167,7 +167,23 @@ namespace gambit.neuroguide
                 showDebugLogs = logs,
                 totalDurationInSeconds = totalDurationInSeconds,
                 threshold = threshold,
-                preventThresholdPassedLength = preventThresholdPassedLength
+                preventThresholdPassedLength = preventThresholdPassedLength,
+                OnAboveThreshold = ()=>
+                {
+                    //Debug.Log( "Above Threshold" );
+                },
+                OnBelowThreshold = ()=>
+                {
+                    //Debug.Log( "Below Threshold" );
+                },
+                OnDataUpdate = (float score)=>
+                {
+                    //Debug.Log( score );
+                },
+                OnRecievingRewardChanged = (bool reward)=>
+                {
+                    //Debug.Log( reward );
+                }
             }, 
 
             //OnSuccess
@@ -180,12 +196,6 @@ namespace gambit.neuroguide
             (string error ) =>
             {
                 if( logs ) Debug.Log( error );
-            },
-
-            //OnDataUpdated
-            (float data ) =>
-            {
-                if(logs) Debug.Log( data );
             }
         ); 
     

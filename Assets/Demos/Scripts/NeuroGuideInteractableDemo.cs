@@ -38,7 +38,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
     public void OnAboveThreshold()
     //----------------------------------//
     {
-        Debug.Log( "OnAboveThreshold" );
+        //Debug.Log( "OnAboveThreshold" );
 
     } //END OnAboveThreshold
 
@@ -53,7 +53,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
     public void OnBelowThreshold()
     //--------------------------------//
     {
-        Debug.Log( "OnBelowThreshold" );
+        //Debug.Log( "OnBelowThreshold" );
     
     } //END OnBelowThreshold Method
 

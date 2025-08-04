@@ -73,39 +73,29 @@ namespace gambit.neuroguide
         /// Flag set after we fall below the threshold value, 
         /// used to prevent the OnAboveThreshold callback for the length of time set via the preventThresholdPassedLength value.
         /// </summary>
-        private static bool preventThresholdPassed;
+        private static bool preventOnAboveThreshold;
 
         /// <summary>
         /// Used to prevent how long we should wait before we call OnAboveThreshold,
         /// after we get our score above the threshold value, then fall back below.
         /// This counter float has the DeltaTime variable added to it each Update()
         /// </summary>
-        private static float preventThresholdPassedTimer = 0f;
+        private static float preventOnAboveThresholdTimer = 0f;
 
         /// <summary>
         /// Has the score passed the threshold value?
         /// </summary>
-        private static bool thresholdPassed;
-
-        /// <summary>
-        /// Callback delegate called when our score goes above the threshold and enough time has passed
-        /// </summary>
-        private static Action OnAboveThreshold;
-
-        /// <summary>
-        /// Callback delegate called when our score goes below the threshold
-        /// </summary>
-        private static Action OnBelowThreshold;
+        private static bool scoreIsAboveThreshold;
 
         /// <summary>
         /// Are we calling OnAboveCallback this Update()? If so, we also need to let all our interactables know
         /// </summary>
-        private static bool sendOnAboveCallbackToInteractables = false;
+        private static bool sendOnAboveThresholdCallback = false;
 
         /// <summary>
         /// Are we calling OnBelowCallback this Update()? If so, we also need to let all our interactables know
         /// </summary>
-        private static bool sendOnBelowCallbackToInteractables = false;
+        private static bool sendOnBelowThresholdCallback = false;
 
         #endregion
 
@@ -121,26 +111,28 @@ namespace gambit.neuroguide
             //Regardless of anything else, we always update our score
             DetermineCurrentScore();
 
-
+            
             //Next, Figure out if the score is above or below the threshold
-            UpdatePreventThresholdTimer();
-
             CheckIfScoreIsAboveThreshold();
 
             CheckIfScoreIsBelowThreshold();
 
+            SendThresholdMessageToCallbacks();
+
             SendThresholdMessageToInteractables();
 
+            ResetThresholdVariablesAndFlags();
+            
 
             //Next, figure out if the DataUpdate callback should be messaged
             CheckIfOnRecievingRewardHasChanged();
 
+            SendDataUpdateMessageToCallbacks();
+
             SendDataUpdateMessageToInteractables();
 
-            StorePreviousData();
-
-            ResetVariablesAndFlags();
-
+            SetupDataForNextUpdate();
+            
         } //END Update Method
 
         #endregion
@@ -174,9 +166,6 @@ namespace gambit.neuroguide
                 return;
             }
 
-            // Store the score before any changes to see if an update is needed.
-            previousScore = system.currentScore;
-
             // If in the reward state, add time. If not, subtract time.
             // Time.deltaTime ensures the change is frame-rate independent.
             if(system.currentData.Value.isRecievingReward)
@@ -196,42 +185,6 @@ namespace gambit.neuroguide
 
 
         } //END DetermineCurrentScore Method
-
-        #endregion
-
-        #region PRIVATE - UPDATE - UPDATE PREVENT THRESHOLD TIMER
-
-        /// <summary>
-        /// Every Update, if our Threshold timer is active, update it with our DeltaTime
-        /// If the timer goes beyond the total length of the timer, disable the timer and set a flag
-        /// letting other functions know the threshold timer has been completed
-        /// </summary>
-        //-------------------------------------------------------//
-        private static void UpdatePreventThresholdTimer()
-        //-------------------------------------------------------//
-        {
-            if(system == null || ( system != null && system.options == null ) )
-            {
-                return;
-            }
-
-            if(preventThresholdPassed)
-            {
-                preventThresholdPassedTimer += Time.deltaTime;
-
-                Debug.Log( preventThresholdPassedTimer );
-
-                if(preventThresholdPassedTimer > system.options.preventThresholdPassedLength)
-                {
-                    //We waited out the timer, lets set our flags to let other functions know we're ready
-                    //to allow the OnAboveThreshold Action callback to be called again
-                    preventThresholdPassed = false;
-
-                    Debug.Log( "preventThresholdPassed = false" );
-                }
-            }
-
-        } //END UpdatePreventThresholdTimer Method
 
         #endregion
 
@@ -257,18 +210,11 @@ namespace gambit.neuroguide
             if(system.currentScore > system.options.threshold)
             {
                 
-                if(thresholdPassed == false)
+                if(scoreIsAboveThreshold == false)
                 {
-                    Debug.Log( "score is above threshold, and thresholdPassed = false, setting thresholdPassed to true" );
-                    thresholdPassed = true;
+                    scoreIsAboveThreshold = true;
 
-                    //Only call the callback if we've waited out the preventThreshold timer,
-                    //This prevents the callback from being called too quickly after we fall below the threshold
-                    if(preventThresholdPassed == false)
-                    {
-                        sendOnAboveCallbackToInteractables = true;
-                        OnAboveThreshold?.Invoke();
-                    }
+                    sendOnAboveThresholdCallback = true;
                 }
             }
 
@@ -301,23 +247,49 @@ namespace gambit.neuroguide
             {
                 //We only need to call our Callback and set our flags if this is the first time we've fallen below the threshold.
                 //When we get back above the threshold, these flags are okay to be set again
-                if(thresholdPassed == true)
+                if(scoreIsAboveThreshold == true)
                 {
-                    thresholdPassed = false;
+                    scoreIsAboveThreshold = false;
 
-                    if(preventThresholdPassed == false)
-                    {
-                        preventThresholdPassed = true;
-                        preventThresholdPassedTimer = 0f;
-                    }
-
-                    sendOnBelowCallbackToInteractables = true;
-                    OnBelowThreshold?.Invoke();
+                    sendOnBelowThresholdCallback = true;
                 }
                 
             }
 
         } //END CheckIfScoreIsBelowThreshold Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - SEND THRESHOLD UPDATE MESSAGES TO CALLBACKS
+
+        /// <summary>
+        /// If we've gone above or below the threshold this Update, inform the listeners
+        /// </summary>
+        //-----------------------------------------------------------------//
+        private static void SendThresholdMessageToCallbacks()
+        //-----------------------------------------------------------------//
+        {
+            if(system == null)
+            {
+                return; 
+            }
+
+            if(system.options == null)
+            {
+                return;
+            }
+
+            if(sendOnAboveThresholdCallback)
+            {
+                system.options.OnAboveThreshold?.Invoke();
+            }
+
+            if(sendOnBelowThresholdCallback)
+            {
+                system.options.OnBelowThreshold?.Invoke();
+            }
+
+        } //END SendThresholdMessageToCallbacks Method
 
         #endregion
 
@@ -339,18 +311,35 @@ namespace gambit.neuroguide
             //We do this regardless of whether or not the score has changed from the last Update()
             for(int i = 0; i < system.interactables.Count; i++)
             {
-                if(sendOnAboveCallbackToInteractables)
+                if(sendOnAboveThresholdCallback)
                 {
                     system.interactables[ i ].OnAboveThreshold();
                 }
 
-                if(sendOnBelowCallbackToInteractables)
+                if(sendOnBelowThresholdCallback)
                 {
                     system.interactables[ i ].OnBelowThreshold();
                 }
             }
 
         } //END SendThresholdMessageToInteractables Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - RESET THRESHOLD VARIABLES AND FLAGS
+
+        /// <summary>
+        /// Resets variables and flags used to track when we go above and below the score threshold.
+        /// Occurs every Update() cycle
+        /// </summary>
+        //------------------------------------------------------------//
+        private static void ResetThresholdVariablesAndFlags()
+        //------------------------------------------------------------//
+        {
+            sendOnAboveThresholdCallback = false;
+            sendOnBelowThresholdCallback = false;
+
+        } //END ResetThresholdVariablesAndFlags Method
 
         #endregion
 
@@ -382,16 +371,58 @@ namespace gambit.neuroguide
             //then the state has changed
             if(system.previousData.HasValue == false)
             {
+                //Debug.Log( "previousData has no value, so reward has changed" );
                 isRecievingRewardChanged = true;
             }
             //Of if the previous 'isRecievingReward' is different than the current data
             //then the state has changed
             else if(system.previousData.Value.isRecievingReward != system.currentData.Value.isRecievingReward)
             {
+                //Debug.Log( "previous.isRecievingReward is different from current.isRecievingReward" );
                 isRecievingRewardChanged = true;
             }
 
         } //END CheckIfOnRecievingRewardHasChanged Method
+
+        #endregion
+
+        #region PRIVATE - UPDATE - SEND DATA UPDATE MESSAGE TO CALLBACKS
+
+        /// <summary>
+        /// Messages callbacks based on the current score
+        /// </summary>
+        //---------------------------------------------------//
+        private static void SendDataUpdateMessageToCallbacks() 
+        //---------------------------------------------------//
+        {
+
+            if(system == null)
+            {
+                return;
+            }
+
+            if(system.options == null)
+            {
+                return;
+            }
+
+            // If the score has changed, invoke the event to notify other parts of the experience.
+            // This check prevents the event from firing unnecessarily every single frame.
+            if(system.currentScore != previousScore)
+            {
+                //Debug.Log( "current = " + system.currentScore + ", previous = " + previousScore );
+
+                //If the isRecievingReward changed from true to false, or false to true, then let the callbacks know
+                if(isRecievingRewardChanged)
+                {
+                    system.options.OnRecievingRewardChanged?.Invoke( system.currentData.Value.isRecievingReward );
+                }
+
+                //Let any callbacks know about the new score
+                system.options.OnDataUpdate?.Invoke( system.currentScore );
+            }
+
+        } //END SendDataUpdateMessageToCallbacks Method
 
         #endregion
 
@@ -418,8 +449,6 @@ namespace gambit.neuroguide
             // This check prevents the event from firing unnecessarily every single frame.
             if(system.currentScore != previousScore)
             {
-                //Loop through all interactables, and let them know if the OnAboveThreshold callback should be called
-                //We do this regardless of whether or not the score has changed from the last Update()
                 for(int i = 0; i < system.interactables.Count; i++)
                 {
 
@@ -438,41 +467,38 @@ namespace gambit.neuroguide
 
         #endregion
 
-        #region PRIVATE - UPDATE - STORE PREVIOUS DATA
+        #region PRIVATE - UPDATE - SETUP DATA FOR NEXT UPDATE
 
         /// <summary>
-        /// Stores the current data as the previous, then sets our current data as empty, setting us up for the next Update()
-        /// </summary>
-        //-------------------------------------------//
-        private static void StorePreviousData()
-        //-------------------------------------------//
-        {
-
-            //Store our currentData as our previousData
-            system.previousData = system.currentData;
-
-            //Now that we've processed the data from the hardware, set our data object to null so we dont' reprocess it next Update!
-            system.currentData = null;
-
-        } //END StorePreviousData Method
-
-        #endregion
-
-        #region PRIVATE - UPDATE - RESET VARIABLES AND FLAGS
-
-        /// <summary>
-        /// Reset variables and flags every Update()
+        /// Reset variables and flags used to update the score data every Update()
         /// </summary>
         //-------------------------------------------------------//
-        private static void ResetVariablesAndFlags()
+        private static void SetupDataForNextUpdate()
         //-------------------------------------------------------//
         {
 
-            sendOnAboveCallbackToInteractables = false;
+            // Store the current score as the previous
+            //Debug.Log( "Setting previousScore to " + system.currentScore );
+            previousScore = system.currentScore;
 
-            sendOnBelowCallbackToInteractables = false;
+            //If our currentData is not null, copy it to our previousData
+            if(system.currentData.HasValue)
+            {
+                //Store our currentData as our previousData
+                system.previousData = new NeuroGuideData()
+                {
+                    isRecievingReward = system.currentData.Value.isRecievingReward,
+                    timestamp = system.currentData.Value.timestamp
+                };
 
-        } //END ResetVariablesAndFlags Method
+                //Debug.Log( "Set previous to current, previous.HasValue = " + system.previousData.HasValue + ", current.HasValue = " + system.currentData.HasValue );
+
+                //Now that we've processed the data from the hardware, set our data object to null so we dont' reprocess it next Update!
+                system.currentData = null;
+
+            }
+
+        } //END SetupDataForNextUpdate Method
 
         #endregion
 
@@ -511,6 +537,26 @@ namespace gambit.neuroguide
             /// </summary>
             public float preventThresholdPassedLength = 2f;
 
+            /// <summary>
+            /// Callback delegate called when our score goes above the threshold and enough time has passed
+            /// </summary>
+            public Action OnAboveThreshold;
+
+            /// <summary>
+            /// Callback delegate called when our score goes below the threshold
+            /// </summary>
+            public Action OnBelowThreshold;
+
+            /// <summary>
+            /// Callback delegate called when our reward boolean has flipped from true to false or false to true
+            /// </summary>
+            public Action<bool> OnRecievingRewardChanged;
+
+            /// <summary>
+            /// Callback delegate called when our score changes
+            /// </summary>
+            public Action<float> OnDataUpdate;
+
         } //END Options Class
 
         #endregion
@@ -528,11 +574,6 @@ namespace gambit.neuroguide
             /// List of the interactables we located when initializing
             /// </summary>
             public List<INeuroGuideInteractable> interactables = new List<INeuroGuideInteractable>();
-
-            /// <summary>
-            /// Unity action to call when the NeuroGuide data has been updated
-            /// </summary>
-            public Action<float> OnDataUpdate;
 
             /// <summary>
             /// How far the player is, normalizes 0-1, where '1' is reaching the end of the experience
@@ -570,8 +611,7 @@ namespace gambit.neuroguide
         public static void Create(
             Options options = null,
             Action<NeuroGuideExperienceSystem> OnSuccess = null,
-            Action<string> OnFailed = null,
-            Action<float> OnDataUpdated = null )
+            Action<string> OnFailed = null )
         //-------------------------------------//
         {
             if(system != null)
@@ -596,7 +636,6 @@ namespace gambit.neuroguide
             //Generate a NeuroGuideSystem object
             system = new NeuroGuideExperienceSystem();
             system.options = options;
-            system.OnDataUpdate = OnDataUpdated;
             system.options.hardwareSystem.OnDataUpdate += OnHardwareUpdate;
 
             StoreAllComponentsWithInterfaceIncludingInactive( system );
