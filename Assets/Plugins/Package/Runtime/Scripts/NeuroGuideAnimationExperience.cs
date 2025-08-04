@@ -44,9 +44,13 @@ namespace gambit.neuroguide
 {
 
     /// <summary>
-    /// When the NeuroGuideManager tracks the incoming reward state, this class tracks the overall length of how long we have been in a reward state and calls INeuroGuideInteractable callbacks
+    /// When the NeuroGuideManager tracks the incoming reward state,
+    /// we transform the focus into a 0-1 normalize score.
+    /// When the score goes above or below a threshold, we send callbacks
+    /// this class tracks the overall length of how long we have been 
+    /// in a reward state and calls INeuroGuideInteractable callbacks
     /// </summary>
-    public class NeuroGuideExperience: Singleton<NeuroGuideExperience>
+    public class NeuroGuideAnimationExperience: Singleton<NeuroGuideAnimationExperience>
     {
 
         #region PUBLIC - VARIABLES
@@ -54,7 +58,7 @@ namespace gambit.neuroguide
         /// <summary>
         /// Current instance of the NeuroGuideExperience system, initialized during Create()
         /// </summary>
-        public static NeuroGuideExperienceSystem system;
+        public static NeuroGuideAnimationExperienceSystem system;
 
         #endregion
 
@@ -68,19 +72,6 @@ namespace gambit.neuroguide
         //Store a flag, if set to true then later during Update() we'll send a message to all INeuroGuideInteractable
         //classes to let them know the isRecievingReward state has changed
         private static bool isRecievingRewardChanged = false;
-
-        /// <summary>
-        /// Flag set after we fall below the threshold value, 
-        /// used to prevent the OnAboveThreshold callback for the length of time set via the preventThresholdPassedLength value.
-        /// </summary>
-        private static bool preventOnAboveThreshold;
-
-        /// <summary>
-        /// Used to prevent how long we should wait before we call OnAboveThreshold,
-        /// after we get our score above the threshold value, then fall back below.
-        /// This counter float has the DeltaTime variable added to it each Update()
-        /// </summary>
-        private static float preventOnAboveThresholdTimer = 0f;
 
         /// <summary>
         /// Has the score passed the threshold value?
@@ -531,13 +522,6 @@ namespace gambit.neuroguide
             public float threshold = .9f;
 
             /// <summary>
-            /// How long we want to prevent the OnAboveThreshold Action callback from being called
-            /// after being above the threshold, then falling below the threshold value?
-            /// This prevents OnAboveThreshold callback from being called until the timer runs out
-            /// </summary>
-            public float preventThresholdPassedLength = 2f;
-
-            /// <summary>
             /// Callback delegate called when our score goes above the threshold and enough time has passed
             /// </summary>
             public Action OnAboveThreshold;
@@ -563,7 +547,7 @@ namespace gambit.neuroguide
 
         #region PUBLIC - RETURN CLASS : NEUROGUIDE EXPERIENCE SYSTEM
 
-        public class NeuroGuideExperienceSystem
+        public class NeuroGuideAnimationExperienceSystem
         {
             /// <summary>
             /// The options passed in during Create()
@@ -573,7 +557,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// List of the interactables we located when initializing
             /// </summary>
-            public List<INeuroGuideInteractable> interactables = new List<INeuroGuideInteractable>();
+            public List<INeuroGuideAnimationExperienceInteractable> interactables = new List<INeuroGuideAnimationExperienceInteractable>();
 
             /// <summary>
             /// How far the player is, normalizes 0-1, where '1' is reaching the end of the experience
@@ -595,7 +579,7 @@ namespace gambit.neuroguide
             /// </summary>
             public NeuroGuideData? previousData;
 
-        } //END NeuroGuideExperienceSystem Class
+        } //END NeuroGuideAnimationExperienceSystem Class
 
         #endregion
 
@@ -610,7 +594,7 @@ namespace gambit.neuroguide
         //-------------------------------------//
         public static void Create(
             Options options = null,
-            Action<NeuroGuideExperienceSystem> OnSuccess = null,
+            Action<NeuroGuideAnimationExperienceSystem> OnSuccess = null,
             Action<string> OnFailed = null )
         //-------------------------------------//
         {
@@ -634,7 +618,7 @@ namespace gambit.neuroguide
             }
 
             //Generate a NeuroGuideSystem object
-            system = new NeuroGuideExperienceSystem();
+            system = new NeuroGuideAnimationExperienceSystem();
             system.options = options;
             system.options.hardwareSystem.OnDataUpdate += OnHardwareUpdate;
 
@@ -734,12 +718,12 @@ namespace gambit.neuroguide
         /// </summary>
         /// <returns>A List of components that implement the INeuroGuideInteractable.</returns>
         //----------------------------------------------------------------------------------------------//
-        private static void StoreAllComponentsWithInterfaceIncludingInactive( NeuroGuideExperienceSystem system )
+        private static void StoreAllComponentsWithInterfaceIncludingInactive( NeuroGuideAnimationExperienceSystem system )
         //----------------------------------------------------------------------------------------------//
         {
             // To include inactive GameObjects in the search, use the FindObjectsInactive parameter.
-            INeuroGuideInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>( FindObjectsInactive.Include, FindObjectsSortMode.None )
-                                                             .OfType<INeuroGuideInteractable>()
+            INeuroGuideAnimationExperienceInteractable[ ] interfaces = UnityEngine.Object.FindObjectsByType<UnityEngine.MonoBehaviour>( FindObjectsInactive.Include, FindObjectsSortMode.None )
+                                                             .OfType<INeuroGuideAnimationExperienceInteractable>()
                                                              .ToArray();
 
             if(interfaces == null || (interfaces != null && interfaces.Length == 0))
@@ -748,7 +732,7 @@ namespace gambit.neuroguide
             }
             else
             {
-                system.interactables = new List<INeuroGuideInteractable>( interfaces );
+                system.interactables = new List<INeuroGuideAnimationExperienceInteractable>( interfaces );
             }
 
         } //END StoreAllComponentsWithInterfaceIncludingInactive Method

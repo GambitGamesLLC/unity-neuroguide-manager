@@ -22,9 +22,11 @@ namespace gambit.neuroguide
     #endregion
 
     /// <summary>
-    /// Spawns cubes to test the NeuroGuide hardware package. Press Enter to spawn, Delete to destroy, and Up and Down keys to test
+    /// Spawns cubes to test the NeuroGuide hardware package. 
+    /// Uses the NeuroGuide Animation Experience system.
+    /// Use Up and Down keys to test
     /// </summary>
-    public class NeuroGuideDemo : MonoBehaviour
+    public class NeuroGuideAnimationExperienceDemo : MonoBehaviour
 {
 
     #region PUBLIC - VARIABLES
@@ -72,45 +74,7 @@ namespace gambit.neuroguide
 
     #endregion
 
-    #region PUBLIC - UPDATE
-
-    /// <summary>
-    /// Unity lifecycle method
-    /// </summary>
-    //----------------------------------//
-    public void Update()
-    //----------------------------------//
-    {
-
-        CreateOnEnterKey();
-        DestroyOnDeleteKey();
-
-    } //END Update Method
-
-    #endregion
-
-    #region PRIVATE - CREATE ON ENTER KEY PRESSED
-
-    /// <summary>
-    /// Creates the NeuroGuideManager instance when the enter key is pressed
-    /// </summary>
-    //-----------------------------------------------//
-    private void CreateOnEnterKey()
-    //-----------------------------------------------//
-    {
-#if UNITY_INPUT
-        if(Keyboard.current.enterKey.wasPressedThisFrame)
-        {
-            CreateNeuroGuideManager();
-        }
-#else
-        if( Input.GetKeyUp( KeyCode.Enter ) )
-        {
-            CreateNeuroGuideManager();
-        }
-#endif
-
-    } //END CreateOnEnterKey Method
+    #region PRIVATE - CREATE NEUROGUIDE MANAGER
 
     /// <summary>
     /// Creates the NeuroGuideManager
@@ -133,7 +97,7 @@ namespace gambit.neuroguide
             ( NeuroGuideManager.NeuroGuideSystem system ) => {
                 //if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
 
-                CreateNeuroGuideExperience();
+                CreateNeuroGuideAnimationExperience();
             },
 
             //OnFailed
@@ -156,18 +120,17 @@ namespace gambit.neuroguide
     } //END CreateNeuroGuideManager Method
 
     //----------------------------------------------//
-    private void CreateNeuroGuideExperience()
+    private void CreateNeuroGuideAnimationExperience()
     //----------------------------------------------//
     {
-        NeuroGuideExperience.Create
+        NeuroGuideAnimationExperience.Create
         (
             //Create and Pass in Options object
-            new NeuroGuideExperience.Options()
+            new NeuroGuideAnimationExperience.Options()
             {
                 showDebugLogs = logs,
                 totalDurationInSeconds = totalDurationInSeconds,
                 threshold = threshold,
-                preventThresholdPassedLength = preventThresholdPassedLength,
                 OnAboveThreshold = ()=>
                 {
                     //Debug.Log( "Above Threshold" );
@@ -187,9 +150,9 @@ namespace gambit.neuroguide
             }, 
 
             //OnSuccess
-            (NeuroGuideExperience.NeuroGuideExperienceSystem system)=> 
+            (NeuroGuideAnimationExperience.NeuroGuideAnimationExperienceSystem system)=> 
             {
-                //if( logs ) Debug.Log( "CreateNeuroGuideExperience() OnSuccess" );
+                //if( logs ) Debug.Log( "CreateNeuroGuideAnimationExperience() OnSuccess" );
             },
             
             //OnError
@@ -197,40 +160,12 @@ namespace gambit.neuroguide
             {
                 if( logs ) Debug.Log( error );
             }
-        ); 
-    
-    } //END CreateNeuroGuideExperience Method
+        );
 
-#endregion
+        } //END CreateNeuroGuideAnimationExperience Method
 
-    #region PRIVATE - DESTROY ON DELETE KEY PRESSED
+        #endregion
 
-    /// <summary>
-    /// Destroy the NeuroGuideManager instance
-    /// </summary>
-    //--------------------------------------------//
-    private void DestroyOnDeleteKey()
-    //--------------------------------------------//
-    {
-
-#if UNITY_INPUT
-        if(Keyboard.current.deleteKey.wasPressedThisFrame)
-        {
-            NeuroGuideManager.Destroy();
-            NeuroGuideExperience.Destroy();
-        }
-#else
-        if( Input.GetKeyUp( KeyCode.Delete ) )
-        {
-            NeuroGuideManager.Destroy();
-            NeuroGuideExperience.Destroy();
-        }
-#endif
-
-    } //END DestroyOnDelete
-
-    #endregion
-
-} //END NeuroGuideDemo Class
+    } //END NeuroGuideAnimationExperienceDemo Class
 
 } //END gambit.neuroguide Namespace

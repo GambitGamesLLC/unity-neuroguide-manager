@@ -15,7 +15,7 @@ using UnityEngine;
 /// <summary>
 /// Simple test to show how to respond to NeuroGuide experience value changes
 /// </summary>
-public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideInteractable
+public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExperienceInteractable
 {
 
     #region PUBLIC - VARIABLES

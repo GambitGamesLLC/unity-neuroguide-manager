@@ -1,7 +1,7 @@
 /**************************************************
- * INeuroGuideInteractable
+ * INeuroGuideAnimationExperienceInteractable
  * 
- * Interface class that contains methods to respond to NeuroGuide experience events called by the NeuroGuideExperience singleton
+ * Interface class that contains methods to respond to NeuroGuide Animation experience events called by the NeuroGuideAnimationExperience singleton
  ***************************************************/
 
 using UnityEngine;
@@ -12,7 +12,7 @@ namespace gambit.neuroguide
     /// <summary>
     /// Interface class, contains methods to respond to NeuroGuide hardware events
     /// </summary>
-    public interface INeuroGuideInteractable
+    public interface INeuroGuideAnimationExperienceInteractable
     {
         /// <summary>
         /// Called when the user gets their score above the threshold value in the experience.
@@ -39,6 +39,6 @@ namespace gambit.neuroguide
         /// <param name="system">The current normalized value (0-1) of how far we are in the NeuroGuide experience</param>
         void OnDataUpdate( float normalizedValue );
 
-    } //END INeuroGuideInteractable Interface Class
+    } //END INeuroGuideAnimationExperienceInteractable Interface Class
 
 }
