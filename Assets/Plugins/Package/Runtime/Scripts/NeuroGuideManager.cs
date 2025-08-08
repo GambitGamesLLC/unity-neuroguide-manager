@@ -716,9 +716,27 @@ namespace gambit.neuroguide
         /// </summary>
         /// <param name="data"></param>
         //----------------------------------------------//
-        private void SendUDPData( byte data )
+        public void SendUDPData( byte data )
         //----------------------------------------------//
         {
+            if(system == null)
+            {
+                Debug.LogError( "NeuroGuideManager SendUDPData() system object is null. Unable to continue" );
+                return;
+            }
+
+            if(system.options == null)
+            {
+                Debug.LogError( "NeuroGuideManager SendUDPData() system.options object is null. Unable to continue" );
+                return;
+            }
+
+            if(udpSendClient == null)
+            {
+                Debug.LogError( "NeuroGuideManager SendUDPData() udpSendClient is null. Unable to continue" );
+                return;
+            }
+
             try
             {
                 byte[ ] sendBytes = new byte[ ] { data };
