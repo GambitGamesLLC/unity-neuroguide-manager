@@ -15,7 +15,7 @@ using UnityEngine;
 /// <summary>
 /// Simple test to show how to respond to NeuroGuide experience value changes
 /// </summary>
-public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExperienceInteractable
+public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExperienceInteractable, INeuroGuideFocusMeterExperienceInteractable
 {
 
     #region PUBLIC - VARIABLES
@@ -38,7 +38,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     public void OnAboveThreshold()
     //----------------------------------//
     {
-        //Debug.Log( "OnAboveThreshold" );
+        Debug.Log("NeuroGuideInteractableDemo.cs // OnAboveThreshold() //");
 
     } //END OnAboveThreshold
 
@@ -53,7 +53,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     public void OnBelowThreshold()
     //--------------------------------//
     {
-        //Debug.Log( "OnBelowThreshold" );
+        Debug.Log("NeuroGuideInteractableDemo // OnBelowThreshold() //");
     
     } //END OnBelowThreshold Method
 
@@ -66,10 +66,58 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     /// </summary>
     /// <param name="isRecievingReward">Is the user recieving a reward?</param>
     //------------------------------------------------------------------------------------------//
-    public void OnRecievingRewardChanged( bool isRecievingReward )
+    public void OnRecievingRewardChanged(bool isRecievingReward)
     //------------------------------------------------------------------------------------------//
     {
-        //Debug.Log( "NeuroGuideInteractableDemo.cs OnRecievingRewardChanged() state = " + isRecievingReward.ToString() );
+        Debug.Log("NeuroGuideInteractableDemo.cs OnRecievingRewardChanged() state = " + isRecievingReward.ToString());
+
+    } //END OnRecievingRewardChanged Method
+
+    #endregion
+
+    #region PUBLIC - ON ABOVE FOCUS THRESHOLD
+
+    /// <summary>
+    /// Called when the score goes above the threshold.
+    /// Once the score falls below the threshold, 
+    /// we wait for a timer to complete before we can call this again when we go above the threshold
+    /// </summary>
+    //----------------------------------//
+    public void OnAboveFocusThreshold()
+    //----------------------------------//
+    {
+        Debug.Log("NeuroGuideInteractableDemo.cs // OnAboveThreshold() //");
+
+    } //END OnAboveThreshold
+
+    #endregion
+
+    #region PUBLIC - ON BELOW FOCUS THRESHOLD
+
+    /// <summary>
+    /// Called when the score goes above the threshold, then falls back below it
+    /// </summary>
+    //--------------------------------//
+    public void OnBelowFocusThreshold()
+    //--------------------------------//
+    {
+        Debug.Log("NeuroGuideInteractableDemo // OnBelowFocusThreshold() //");
+
+    } //END OnBelowThreshold Method
+
+    #endregion
+
+    #region PUBLIC - ON RECIEVING REWARD UPDATE
+
+    /// <summary>
+    /// Called when the user start or stops recieving a reward
+    /// </summary>
+    /// <param name="isRecievingReward">Is the user recieving a reward?</param>
+    //------------------------------------------------------------------------------------------//
+    public void OnRecievingFocusRewardChanged(bool isRecievingReward)
+    //------------------------------------------------------------------------------------------//
+    {
+        Debug.Log("NeuroGuideInteractableDemo.cs // OnRecievingFocusRewardChanged() // state = " + isRecievingReward.ToString());
 
     } //END OnRecievingRewardChanged Method
 
