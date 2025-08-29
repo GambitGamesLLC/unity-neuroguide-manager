@@ -97,7 +97,7 @@ namespace gambit.neuroguide
                 (NeuroGuideManager.NeuroGuideSystem system) => {
                     //if( logs ) Debug.Log( "NeuroGuideDemo.cs CreateNeuroGuideManager() Successfully created NeuroGuideManager and recieved system object" );
 
-                    CreateNeuroGuideAnimationExperience();
+                    CreateNeuroGuideFocusMeterExperience();
                 },
 
                 //OnFailed
@@ -120,37 +120,37 @@ namespace gambit.neuroguide
         } //END CreateNeuroGuideManager Method
 
         //----------------------------------------------//
-        private void CreateNeuroGuideAnimationExperience()
+        private void CreateNeuroGuideFocusMeterExperience()
         //----------------------------------------------//
         {
-            NeuroGuideAnimationExperience.Create
+            NeuroGuideFocusMeterExperience.Create
             (
                 //Create and Pass in Options object
-                new NeuroGuideAnimationExperience.Options()
+                new NeuroGuideFocusMeterExperience.Options()
                 {
                     showDebugLogs = logs,
                     totalDurationInSeconds = totalDurationInSeconds,
                     threshold = threshold,
-                    OnAboveThreshold = () =>
+                    OnAboveFocusThreshold = () =>
                     {
                         //Debug.Log( "Above Threshold" );
                     },
-                    OnBelowThreshold = () =>
+                    OnBelowFocusThreshold = () =>
                     {
                         //Debug.Log( "Below Threshold" );
                     },
-                    OnDataUpdate = (float score) =>
+                    OnFocusDataUpdate = (float score) =>
                     {
                         //Debug.Log( score );
                     },
-                    OnRecievingRewardChanged = (bool reward) =>
+                    OnRecievingFocusRewardChanged = (bool reward) =>
                     {
                         //Debug.Log( reward );
                     }
                 },
 
                 //OnSuccess
-                (NeuroGuideAnimationExperience.NeuroGuideAnimationExperienceSystem system) =>
+                (NeuroGuideFocusMeterExperience.NeuroGuideFocusMeterExperienceSystem system) =>
                 {
                     //if( logs ) Debug.Log( "CreateNeuroGuideAnimationExperience() OnSuccess" );
                 },

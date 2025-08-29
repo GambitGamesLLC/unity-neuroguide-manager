@@ -36,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering.VirtualTexturing;
 
 #endregion
@@ -50,7 +51,7 @@ namespace gambit.neuroguide
     /// this class tracks the overall length of how long we have been 
     /// in a reward state and calls INeuroGuideInteractable callbacks
     /// </summary>
-    public class NeuroGuideFocusMeterExperience : Singleton<NeuroGuideAnimationExperience>
+    public class NeuroGuideFocusMeterExperience : Singleton<NeuroGuideFocusMeterExperience>
     {
 
         #region PUBLIC - VARIABLES
@@ -144,16 +145,19 @@ namespace gambit.neuroguide
 
             if (system.currentData == null)
             {
+                Debug.Log("We have no current data");
                 return;
             }
 
             if (system.currentData.HasValue == false)
             {
+                Debug.Log("We have no current data with a value");
                 return;
             }
 
             if (system.options.totalDurationInSeconds <= 0)
             {
+                Debug.Log("We have no value for totalDurationInSeconds");
                 return;
             }
 
@@ -171,9 +175,17 @@ namespace gambit.neuroguide
             // Clamp the progress to ensure it doesn't go below 0 or above the total duration.
             system.currentProgressInSeconds = Mathf.Clamp(system.currentProgressInSeconds, 0f, system.options.totalDurationInSeconds);
 
-            // Calculate the new normalized score.
-            system.currentScore = system.currentProgressInSeconds / system.options.totalDurationInSeconds;
-
+            if(system.hasReachedThreshold == false)
+            {
+                // Calculate the new normalized score.
+                system.currentScore = system.currentProgressInSeconds / system.options.totalDurationInSeconds;
+            }
+            else
+            {
+                // Reset the new normalized score
+                system.currentScore = system.startMeterValue;
+                system.hasReachedThreshold = false;
+            }
 
         } //END DetermineCurrentScore Method
 
@@ -272,12 +284,12 @@ namespace gambit.neuroguide
 
             if (sendOnAboveThresholdCallback)
             {
-                system.options.OnAboveThreshold?.Invoke();
+                system.options.OnAboveFocusThreshold?.Invoke();
             }
 
             if (sendOnBelowThresholdCallback)
             {
-                system.options.OnBelowThreshold?.Invoke();
+                system.options.OnBelowFocusThreshold?.Invoke();
             }
 
         } //END SendThresholdMessageToCallbacks Method
@@ -304,12 +316,12 @@ namespace gambit.neuroguide
             {
                 if (sendOnAboveThresholdCallback)
                 {
-                    system.interactables[i].OnAboveThreshold();
+                    system.interactables[i].OnAboveFocusThreshold();
                 }
 
                 if (sendOnBelowThresholdCallback)
                 {
-                    system.interactables[i].OnBelowThreshold();
+                    system.interactables[i].OnBelowFocusThreshold();
                 }
             }
 
@@ -406,11 +418,11 @@ namespace gambit.neuroguide
                 //If the isRecievingReward changed from true to false, or false to true, then let the callbacks know
                 if (isRecievingRewardChanged)
                 {
-                    system.options.OnRecievingRewardChanged?.Invoke(system.currentData.Value.isRecievingReward);
+                    system.options.OnRecievingFocusRewardChanged?.Invoke(system.currentData.Value.isRecievingReward);
                 }
 
                 //Let any callbacks know about the new score
-                system.options.OnDataUpdate?.Invoke(system.currentScore);
+                system.options.OnFocusDataUpdate?.Invoke(system.currentScore);
             }
 
         } //END SendDataUpdateMessageToCallbacks Method
@@ -446,11 +458,11 @@ namespace gambit.neuroguide
                     //If the isRecievingReward changed from true to false, or false to true, then let the interactables know
                     if (isRecievingRewardChanged)
                     {
-                        system.interactables[i].OnRecievingRewardChanged(system.currentData.Value.isRecievingReward);
+                        system.interactables[i].OnRecievingFocusRewardChanged(system.currentData.Value.isRecievingReward);
                     }
 
                     //Let any interactables know about the new score
-                    system.interactables[i].OnDataUpdate(system.currentScore);
+                    system.interactables[i].OnFocusDataUpdate(system.currentScore);
                 }
             }
 
@@ -524,22 +536,22 @@ namespace gambit.neuroguide
             /// <summary>
             /// Callback delegate called when our score goes above the threshold and enough time has passed
             /// </summary>
-            public Action OnAboveThreshold;
+            public Action OnAboveFocusThreshold;
 
             /// <summary>
             /// Callback delegate called when our score goes below the threshold
             /// </summary>
-            public Action OnBelowThreshold;
+            public Action OnBelowFocusThreshold;
 
             /// <summary>
             /// Callback delegate called when our reward boolean has flipped from true to false or false to true
             /// </summary>
-            public Action<bool> OnRecievingRewardChanged;
+            public Action<bool> OnRecievingFocusRewardChanged;
 
             /// <summary>
             /// Callback delegate called when our score changes
             /// </summary>
-            public Action<float> OnDataUpdate;
+            public Action<float> OnFocusDataUpdate;
 
         } //END Options Class
 
@@ -568,6 +580,26 @@ namespace gambit.neuroguide
             /// The current progress in seconds. Can be useful for debugging or other UI.
             /// </summary>
             public float currentProgressInSeconds = 0f;
+
+            /// <summary>
+            /// The difficulty modifier changes its value based on what level the user is at.  The higher the level, the higher the value
+            /// </summary>
+            public float currentDifficultyModifer = 1f;
+
+            /// <summary>
+            /// The value the meter starts at when 
+            /// </summary>
+            public float startMeterValue = .1f;
+
+            /// <summary>
+            /// The current level the user is at
+            /// </summary>
+            public int currentLevel;
+
+            /// <summary>
+            /// Used to reset our slider value
+            /// </summary>
+            public bool hasReachedThreshold;
 
             /// <summary>
             /// The most up to date data that was sent in. If this is not null, we will process it in the Update() then set it to null
