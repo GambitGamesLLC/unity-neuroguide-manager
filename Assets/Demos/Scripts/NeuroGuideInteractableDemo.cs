@@ -132,7 +132,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     public void OnAboveFocusThreshold()
     //----------------------------------//
     {
-        //Debug.Log("NeuroGuideInteractableDemo.cs // OnAboveFocusThreshold() // ");
+        Debug.Log("NeuroGuideInteractableDemo.cs // OnAboveFocusThreshold() // ");
 
         if(NeuroGuideFocusMeterExperience.system.currentLevel > 5)
         {
@@ -203,6 +203,11 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
         Debug.Log("NeuroGuideInteractableDemo // OnBelowFocusThreshold() //");
 
         NeuroGuideFocusMeterExperience.system.currentLevel--;
+
+        if(NeuroGuideFocusMeterExperience.system.currentLevel < 0)
+        {
+            NeuroGuideFocusMeterExperience.system.currentLevel = 0;
+        }
 
         switch (NeuroGuideFocusMeterExperience.system.currentLevel)
         {
@@ -309,10 +314,13 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     private void SetSliderToStartValue()
     //-------------------------//
     {
+        
+        
         if (slider != null)
         {
-            NeuroGuideFocusMeterExperience.system.hasReachedThreshold = true;
-            NeuroGuideFocusMeterExperience.system.currentScore = NeuroGuideFocusMeterExperience.system.startMeterValue;
+            //NeuroGuideFocusMeterExperience.system.hasReachedThreshold = true;
+            //NeuroGuideFocusMeterExperience.system.currentProgressInSeconds = 0;
+            //NeuroGuideFocusMeterExperience.system.currentScore = NeuroGuideFocusMeterExperience.system.startMeterValue;
             //NeuroGuideFocusMeterExperience.system.hasReachedThreshold = false;
         }
     } // END SetSliderValue

@@ -89,10 +89,14 @@ namespace gambit.neuroguide
         /// </summary>
         private static bool sendOnBelowThresholdCallback = false;
 
+        private static float preventThresholdPassed;
         #endregion
 
         #region PUBLIC - UPDATE
-
+        private void Start()
+        {
+            preventThresholdPassed = 2f;
+        }
         /// <summary>
         /// Unity lifecycle method, used to update the experience progress every time the hardware sends us an update
         /// </summary>
@@ -145,7 +149,7 @@ namespace gambit.neuroguide
 
             if (system.currentData == null)
             {
-                Debug.Log("We have no current data");
+                //Debug.Log("We have no current data");
                 return;
             }
 
@@ -172,6 +176,10 @@ namespace gambit.neuroguide
                 system.currentProgressInSeconds -= Time.deltaTime;
             }
 
+            system.preventThresholdLength += Time.deltaTime;
+
+            Debug.Log(system.currentProgressInSeconds);
+
             // Clamp the progress to ensure it doesn't go below 0 or above the total duration.
             system.currentProgressInSeconds = Mathf.Clamp(system.currentProgressInSeconds, 0f, system.options.totalDurationInSeconds);
 
@@ -183,9 +191,11 @@ namespace gambit.neuroguide
             else
             {
                 // Reset the new normalized score
-                system.currentScore = system.startMeterValue;
+                //system.currentScore = system.startMeterValue;
                 system.hasReachedThreshold = false;
             }
+
+            
 
         } //END DetermineCurrentScore Method
 
@@ -212,9 +222,14 @@ namespace gambit.neuroguide
 
             if (system.currentScore > system.options.threshold)
             {
+                scoreIsAboveThreshold = false;
 
                 if (scoreIsAboveThreshold == false)
                 {
+                    system.currentProgressInSeconds = 0;
+                    system.currentScore = 0;
+                    system.preventThresholdLength = 0;
+
                     scoreIsAboveThreshold = true;
 
                     sendOnAboveThresholdCallback = true;
@@ -245,13 +260,27 @@ namespace gambit.neuroguide
                 return;
             }
 
+
             //If below the threshold
             if (system.currentScore < system.options.threshold)
             {
+                scoreIsAboveThreshold = true;
+
                 //We only need to call our Callback and set our flags if this is the first time we've fallen below the threshold.
                 //When we get back above the threshold, these flags are okay to be set again
                 if (scoreIsAboveThreshold == true)
                 {
+
+                    if (system.preventThresholdLength > preventThresholdPassed)
+                    {
+                        system.preventThresholdLength = 0;
+                        system.hasReachedThreshold = true;
+                    }
+                    else
+                    {
+                        return;
+                    }
+
                     scoreIsAboveThreshold = false;
 
                     sendOnBelowThresholdCallback = true;
@@ -600,6 +629,8 @@ namespace gambit.neuroguide
             /// Used to reset our slider value
             /// </summary>
             public bool hasReachedThreshold;
+
+            public float preventThresholdLength;
 
             /// <summary>
             /// The most up to date data that was sent in. If this is not null, we will process it in the Update() then set it to null
