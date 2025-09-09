@@ -89,14 +89,27 @@ namespace gambit.neuroguide
         /// </summary>
         private static bool sendOnBelowThresholdCallback = false;
 
+        /// <summary>
+        /// How long should we prevent the OnAboveThreshold callback? This happens after getting our score above the threshold, then falling below the threshold.
+        /// </summary>
         private static float preventThresholdPassed;
+
+        #endregion
+
+        #region PRIVATE - START
+
+        //-------------------------//
+        private void Start()
+        //-------------------------//
+        {
+            //preventThresholdPassed = system.options.preventThresholdPassedLength;
+
+        } // END Start
+        
         #endregion
 
         #region PUBLIC - UPDATE
-        private void Start()
-        {
-            preventThresholdPassed = 2f;
-        }
+
         /// <summary>
         /// Unity lifecycle method, used to update the experience progress every time the hardware sends us an update
         /// </summary>
@@ -159,24 +172,19 @@ namespace gambit.neuroguide
                 return;
             }
 
-            if (system.options.totalDurationInSeconds <= 0)
-            {
-                Debug.Log("We have no value for totalDurationInSeconds");
-                return;
-            }
 
             // If in the reward state, add time. If not, subtract time.
             // Time.deltaTime ensures the change is frame-rate independent.
             if (system.currentData.Value.isRecievingReward)
             {
-                system.currentProgressInSeconds += Time.deltaTime;
+                system.currentProgressInSeconds += Time.deltaTime * system.options.gainingFocusMultiplier;
+                system.options.preventThresholdPassedLength += Time.deltaTime * system.options.gainingFocusMultiplier;
             }
             else
             {
-                system.currentProgressInSeconds -= Time.deltaTime;
+                system.currentProgressInSeconds -= Time.deltaTime * system.options.losingFocusMultiplier;
+                system.options.preventThresholdPassedLength += Time.deltaTime * system.options.losingFocusMultiplier;
             }
-
-            system.preventThresholdLength += Time.deltaTime;
 
             Debug.Log(system.currentProgressInSeconds);
 
@@ -191,11 +199,8 @@ namespace gambit.neuroguide
             else
             {
                 // Reset the new normalized score
-                //system.currentScore = system.startMeterValue;
                 system.hasReachedThreshold = false;
             }
-
-            
 
         } //END DetermineCurrentScore Method
 
@@ -222,13 +227,14 @@ namespace gambit.neuroguide
 
             if (system.currentScore > system.options.threshold)
             {
+                // Meaning we just got to the next level, so we cannot be in the threhold
                 scoreIsAboveThreshold = false;
 
                 if (scoreIsAboveThreshold == false)
                 {
                     system.currentProgressInSeconds = 0;
                     system.currentScore = 0;
-                    system.preventThresholdLength = 0;
+                    system.options.preventThresholdPassedLength = 0;
 
                     scoreIsAboveThreshold = true;
 
@@ -264,16 +270,17 @@ namespace gambit.neuroguide
             //If below the threshold
             if (system.currentScore < system.options.threshold)
             {
+                // Meaning we just went above the threshold
                 scoreIsAboveThreshold = true;
 
                 //We only need to call our Callback and set our flags if this is the first time we've fallen below the threshold.
                 //When we get back above the threshold, these flags are okay to be set again
                 if (scoreIsAboveThreshold == true)
                 {
-
-                    if (system.preventThresholdLength > preventThresholdPassed)
+                    
+                    if (system.preventThresholdLength > system.options.preventThresholdPassedLength)
                     {
-                        system.preventThresholdLength = 0;
+                        system.options.preventThresholdPassedLength = 0;
                         system.hasReachedThreshold = true;
                     }
                     else
@@ -563,6 +570,31 @@ namespace gambit.neuroguide
             public float threshold = .9f;
 
             /// <summary>
+            /// How long should we prevent the OnAboveThreshold callback? This happens after getting our score above the threshold, then falling below the threshold.
+            /// </summary>
+            public float preventThresholdPassedLength;
+
+            /// <summary>
+            /// Multiplier for when we are gaining focus.  Can change per level
+            /// </summary>
+            public float gainingFocusMultiplier;
+
+            /// <summary>
+            /// Multiplier for when we are losing focus.  Can change per level
+            /// </summary>
+            public float losingFocusMultiplier;
+
+            /// <summary>
+            /// The number of level gained when gaining focus and going over the threshold
+            /// </summary>
+            public float numOfLevelsGained = 1f;
+
+            /// <summary>
+            /// The number of level lost when losing focus and going under the threshold
+            /// </summary>
+            public float numOfLevelsLost = 1f;
+
+            /// <summary>
             /// Callback delegate called when our score goes above the threshold and enough time has passed
             /// </summary>
             public Action OnAboveFocusThreshold;
@@ -626,10 +658,13 @@ namespace gambit.neuroguide
             public int currentLevel;
 
             /// <summary>
-            /// Used to reset our slider value
+            /// Determines if we have reached the threshold to advance to the next level
             /// </summary>
             public bool hasReachedThreshold;
 
+            /// <summary>
+            /// Timer to prevent OnBelowThreshold from being called after we go above the threshold
+            /// </summary>
             public float preventThresholdLength;
 
             /// <summary>

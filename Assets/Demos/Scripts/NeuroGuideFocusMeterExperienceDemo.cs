@@ -56,6 +56,14 @@ namespace gambit.neuroguide
         /// </summary>
         public float preventThresholdPassedLength = 2f;
 
+        public float gainingFocusMuliplier;
+
+        public float losingFocusMuliplier;
+
+        public float numOfLevelsGained;
+
+        public float numOfLevelsLost;
+
         #endregion
 
         #region PUBLIC - START
@@ -131,6 +139,14 @@ namespace gambit.neuroguide
                     showDebugLogs = logs,
                     totalDurationInSeconds = totalDurationInSeconds,
                     threshold = threshold,
+                    preventThresholdPassedLength = preventThresholdPassedLength,
+                    
+                    gainingFocusMultiplier = gainingFocusMuliplier,
+                    losingFocusMultiplier = losingFocusMuliplier,
+
+                    numOfLevelsGained = numOfLevelsGained,
+                    numOfLevelsLost = numOfLevelsLost,
+
                     OnAboveFocusThreshold = () =>
                     {
                         //Debug.Log( "Above Threshold" );

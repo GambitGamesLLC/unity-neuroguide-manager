@@ -42,8 +42,6 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
     /// </summary>
     private Renderer objectRenderer;
 
-    private bool hasReachedThreshold = false;
-
     [Header("Colors used to represent and convey each level to the user")]
     [SerializeField] private Color level0Color;
     [SerializeField] private Color level1Color;
@@ -143,48 +141,79 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
         {
             case 0:
                 objectRenderer.material.color = level1Color;
-                SetSliderToStartValue();
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
+                
                 break;
 
             case 1:
                 objectRenderer.material.color = level2Color;
-                SetSliderToStartValue();
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
+
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
                 break;
 
             case 2:
                 objectRenderer.material.color = level3Color;
-                SetSliderToStartValue();
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
+
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
                 break;
 
             case 3:
                 objectRenderer.material.color = level4Color;
-                SetSliderToStartValue();
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
+
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
                 break;
 
             case 4:
                 objectRenderer.material.color = level5Color;
-                SetSliderToStartValue();
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
+
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
                 break;
 
             case 5:
                 objectRenderer.material.color = level5Color;
-                SetSliderToStartValue();
 
+                NeuroGuideFocusMeterExperience.system.currentLevel++;
+
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained = 1f;
+                NeuroGuideFocusMeterExperience.system.options.numOfLevelsLost = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
+                NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
                 break;
         }
     } //END OnAboveThreshold
@@ -293,11 +322,6 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
             return;
 
         //Debug.Log( normalizedValue );
-        
-        if(slider != null)
-        {
-            slider.value = normalizedValue;
-        }
 
 #if EXT_DOTWEEN
         Vector3 scale = new Vector3(normalizedValue, normalizedValue, normalizedValue);
@@ -305,25 +329,6 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
 #endif
 
     } //END OnDataUpdate Method
-
-    #endregion
-
-    #region PRIVATE - SET SLIDER VALUE
-
-    //--------------------------//
-    private void SetSliderToStartValue()
-    //-------------------------//
-    {
-        
-        
-        if (slider != null)
-        {
-            //NeuroGuideFocusMeterExperience.system.hasReachedThreshold = true;
-            //NeuroGuideFocusMeterExperience.system.currentProgressInSeconds = 0;
-            //NeuroGuideFocusMeterExperience.system.currentScore = NeuroGuideFocusMeterExperience.system.startMeterValue;
-            //NeuroGuideFocusMeterExperience.system.hasReachedThreshold = false;
-        }
-    } // END SetSliderValue
 
     #endregion
 

@@ -1089,8 +1089,12 @@ MonoBehaviour:
   logs: 1
   debug: 1
   totalDurationInSeconds: 2.5
-  threshold: 0.9
+  threshold: 0.75
   preventThresholdPassedLength: 2
+  gainingFocusMuliplier: 1
+  losingFocusMuliplier: 1
+  numOfLevelsGained: 1
+  numOfLevelsLost: 1
 --- !u!4 &1433006419
 Transform:
   m_ObjectHideFlags: 0
