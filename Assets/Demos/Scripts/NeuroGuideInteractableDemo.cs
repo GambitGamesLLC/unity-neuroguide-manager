@@ -149,6 +149,9 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
 
                 NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
                 NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.threshold = .2f;
+
                 
                 break;
 
@@ -163,6 +166,8 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
                 NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
+                NeuroGuideFocusMeterExperience.system.options.threshold = .4f;
+
                 break;
 
             case 2:
@@ -175,6 +180,8 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
 
                 NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
                 NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.threshold = .6f;
 
                 break;
 
@@ -189,6 +196,8 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
                 NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
 
+                NeuroGuideFocusMeterExperience.system.options.threshold = .8f;
+
                 break;
 
             case 4:
@@ -201,6 +210,8 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
 
                 NeuroGuideFocusMeterExperience.system.options.gainingFocusMultiplier = 1f;
                 NeuroGuideFocusMeterExperience.system.options.losingFocusMultiplier = 1f;
+
+                NeuroGuideFocusMeterExperience.system.options.threshold = .99f;
 
                 break;
 

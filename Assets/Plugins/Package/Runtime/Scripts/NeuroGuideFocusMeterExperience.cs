@@ -35,6 +35,7 @@ public class Singleton<T>: MonoBehaviour where T : MonoBehaviour
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering.VirtualTexturing;
@@ -103,9 +104,10 @@ namespace gambit.neuroguide
         //-------------------------//
         {
             //preventThresholdPassed = system.options.preventThresholdPassedLength;
+            //system.preventThresholdLength = system.options.preventThresholdPassedLength;
 
         } // END Start
-        
+
         #endregion
 
         #region PUBLIC - UPDATE
@@ -178,20 +180,23 @@ namespace gambit.neuroguide
             if (system.currentData.Value.isRecievingReward)
             {
                 system.currentProgressInSeconds += Time.deltaTime * system.options.gainingFocusMultiplier;
-                system.options.preventThresholdPassedLength += Time.deltaTime * system.options.gainingFocusMultiplier;
+                system.preventThresholdLength += Time.deltaTime * system.options.gainingFocusMultiplier;
             }
             else
             {
                 system.currentProgressInSeconds -= Time.deltaTime * system.options.losingFocusMultiplier;
-                system.options.preventThresholdPassedLength += Time.deltaTime * system.options.losingFocusMultiplier;
+                system.preventThresholdLength += Time.deltaTime * system.options.losingFocusMultiplier;
             }
 
-            Debug.Log(system.currentProgressInSeconds);
-
+            /*
+            Debug.Log("CurrentProgressInSeconds: " + system.currentProgressInSeconds);
+            Debug.Log("CurrentScore: " + system.currentScore);
+            Debug.Log("PreventThresholdPassedLength: " + system.preventThresholdLength);
+            */
             // Clamp the progress to ensure it doesn't go below 0 or above the total duration.
             system.currentProgressInSeconds = Mathf.Clamp(system.currentProgressInSeconds, 0f, system.options.totalDurationInSeconds);
 
-            if(system.hasReachedThreshold == false)
+            if (system.hasReachedThreshold == false)
             {
                 // Calculate the new normalized score.
                 system.currentScore = system.currentProgressInSeconds / system.options.totalDurationInSeconds;
@@ -232,9 +237,11 @@ namespace gambit.neuroguide
 
                 if (scoreIsAboveThreshold == false)
                 {
-                    system.currentProgressInSeconds = 0;
-                    system.currentScore = 0;
-                    system.options.preventThresholdPassedLength = 0;
+                    //system.currentProgressInSeconds = 0;
+                    //system.currentScore = 0;
+                    system.preventThresholdLength = 0;
+
+                    NeuroGuideFocusMeterExperience.system.currentLevel++;
 
                     scoreIsAboveThreshold = true;
 
@@ -266,7 +273,6 @@ namespace gambit.neuroguide
                 return;
             }
 
-
             //If below the threshold
             if (system.currentScore < system.options.threshold)
             {
@@ -277,10 +283,9 @@ namespace gambit.neuroguide
                 //When we get back above the threshold, these flags are okay to be set again
                 if (scoreIsAboveThreshold == true)
                 {
-                    
                     if (system.preventThresholdLength > system.options.preventThresholdPassedLength)
                     {
-                        system.options.preventThresholdPassedLength = 0;
+                        system.preventThresholdLength = 0;
                         system.hasReachedThreshold = true;
                     }
                     else
@@ -288,9 +293,73 @@ namespace gambit.neuroguide
                         return;
                     }
 
+                    NeuroGuideFocusMeterExperience.system.currentLevel--;
+
+                    if (NeuroGuideFocusMeterExperience.system.currentLevel < 0)
+                    {
+                        NeuroGuideFocusMeterExperience.system.currentLevel = 0;
+                    }
+
+
+
                     scoreIsAboveThreshold = false;
 
                     sendOnBelowThresholdCallback = true;
+
+
+                    switch (NeuroGuideFocusMeterExperience.system.currentLevel)
+                    {
+                        case 0:
+                            system.currentScore = .0f;
+                            system.currentProgressInSeconds = .0f;
+                            system.options.threshold = .2f;
+
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 0");
+
+                            break;
+
+                        case 1:
+                            system.currentProgressInSeconds = 0.625f;
+                            system.options.threshold = .4f;
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 1");
+
+                            break;
+
+                        case 2:
+                            //system.currentScore = .0f;
+                            //system.currentProgressInSeconds = .0f;
+
+                            //system.currentScore = .45f;
+                            system.currentProgressInSeconds = 1.25f;
+                            system.options.threshold = .6f;
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 2");
+
+                            break;
+
+                        case 3:
+                            //system.currentScore = .0f;
+                            //system.currentProgressInSeconds = .0f;
+
+                            //system.currentScore = .65f;
+                            system.currentProgressInSeconds = 1.875f;
+                            system.options.threshold = .8f;
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 3");
+
+                            break;
+
+                        case 4:
+
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 4");
+
+                            break;
+
+                        case 5:
+
+
+                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 5");
+
+                            break;
+                    }
                 }
 
             }
