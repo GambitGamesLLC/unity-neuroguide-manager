@@ -140,7 +140,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
         switch (NeuroGuideFocusMeterExperience.system.currentLevel)
         {
             case 0:
-                objectRenderer.material.color = level1Color;
+                //objectRenderer.material.color = level1Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
@@ -153,7 +153,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 break;
 
             case 1:
-                objectRenderer.material.color = level2Color;
+                //objectRenderer.material.color = level2Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
@@ -166,7 +166,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 break;
 
             case 2:
-                objectRenderer.material.color = level3Color;
+                //objectRenderer.material.color = level3Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
@@ -179,7 +179,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 break;
 
             case 3:
-                objectRenderer.material.color = level4Color;
+                //objectRenderer.material.color = level4Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
@@ -192,7 +192,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 break;
 
             case 4:
-                objectRenderer.material.color = level5Color;
+                //objectRenderer.material.color = level5Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 
@@ -205,7 +205,7 @@ public class NeuroGuideInteractableDemo : MonoBehaviour, INeuroGuideAnimationExp
                 break;
 
             case 5:
-                objectRenderer.material.color = level5Color;
+                //objectRenderer.material.color = level5Color;
 
                 NeuroGuideFocusMeterExperience.system.currentLevel++;
 

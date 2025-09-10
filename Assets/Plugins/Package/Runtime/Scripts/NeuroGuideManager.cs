@@ -224,6 +224,7 @@ namespace gambit.neuroguide
             Nullable<NeuroGuideData> neuroGuideData = new NeuroGuideData( rewardState, DateTime.Now );
             SendDataUpdatedMessage( neuroGuideData );
 
+            Debug.Log("NeuroguideManager // ProcessDataOnMainThread");
         } //END ProcessUdpDataOnMainThread Method
 
         #endregion
@@ -379,7 +380,7 @@ namespace gambit.neuroguide
 
             //We're done, call the OnSuccess callback
             OnSuccess?.Invoke(system);
-
+            Debug.Log("NeuroguideManager // Create");
         } //END Create Method
 
         #endregion
@@ -483,6 +484,8 @@ namespace gambit.neuroguide
             udpReceiveThread.Start();
             isThreadRunning = true;
 
+            Debug.Log("NeuroGuideManager // StartUDPListener");
+
         } //END StartUDPListener Method
 
         #endregion
@@ -510,7 +513,7 @@ namespace gambit.neuroguide
                 // Wait for the thread to finish gracefully
                 udpReceiveThread.Join();
             }
-
+            Debug.Log("NeuroguideManager // StopUDPListener");
         } //END StopUDPListener Method
 
         #endregion
@@ -580,7 +583,7 @@ namespace gambit.neuroguide
                     }
                 }
             }
-
+            Debug.Log("NeuroGuideManager // ReceiveUDPData");
         } //END ReceiveUDPData Method
 
         #endregion
@@ -606,7 +609,7 @@ namespace gambit.neuroguide
                     SendStateUpdatedMessage();
                 }
 
-                //Debug.Log( "up pressed or held this frame" );
+                Debug.Log( "up pressed or held this frame" );
                 SendUDPData( rewardOn );
             }
 
@@ -750,7 +753,7 @@ namespace gambit.neuroguide
             {
                 Debug.LogError( "NeuroGuideManager SendUDPData() Error sending UDP data: " + e.Message );
             }
-
+            Debug.Log("NeuroguideManager // ReceiveUDPData");
         } //END SendUDPData Method
 
         #endregion
@@ -770,7 +773,7 @@ namespace gambit.neuroguide
             }
 
             system.OnDataUpdate?.Invoke( data );
-
+            Debug.Log("NeuroguideManager // SendDataUpdatedMessage");
         } //END SendDataUpdatedMessage Method
 
         #endregion
@@ -789,7 +792,7 @@ namespace gambit.neuroguide
                 return;
             }
 
-            //Debug.Log( "NeuroGuideManager.cs SendStateUpdatedMessage() state = " + system.state.ToString() );
+            Debug.Log( "NeuroGuideManager.cs SendStateUpdatedMessage() state = " + system.state.ToString() );
             system.OnStateUpdate?.Invoke(system.state);
 
         } //END SendStateUpdatedMessage Method
