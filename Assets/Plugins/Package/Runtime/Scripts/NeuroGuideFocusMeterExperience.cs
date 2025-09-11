@@ -90,24 +90,6 @@ namespace gambit.neuroguide
         /// </summary>
         private static bool sendOnBelowThresholdCallback = false;
 
-        /// <summary>
-        /// How long should we prevent the OnAboveThreshold callback? This happens after getting our score above the threshold, then falling below the threshold.
-        /// </summary>
-        private static float preventThresholdPassed;
-
-        #endregion
-
-        #region PRIVATE - START
-
-        //-------------------------//
-        private void Start()
-        //-------------------------//
-        {
-            //preventThresholdPassed = system.options.preventThresholdPassedLength;
-            //system.preventThresholdLength = system.options.preventThresholdPassedLength;
-
-        } // END Start
-
         #endregion
 
         #region PUBLIC - UPDATE
@@ -237,11 +219,16 @@ namespace gambit.neuroguide
 
                 if (scoreIsAboveThreshold == false)
                 {
-                    //system.currentProgressInSeconds = 0;
-                    //system.currentScore = 0;
                     system.preventThresholdLength = 0;
 
-                    NeuroGuideFocusMeterExperience.system.currentLevel++;
+                    int _levelsToGain = (int)NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained;
+
+                    NeuroGuideFocusMeterExperience.system.currentLevel += _levelsToGain;
+
+                    if (NeuroGuideFocusMeterExperience.system.currentLevel > 5)
+                    {
+                        NeuroGuideFocusMeterExperience.system.currentLevel = 5;
+                    }
 
                     scoreIsAboveThreshold = true;
 
@@ -293,19 +280,18 @@ namespace gambit.neuroguide
                         return;
                     }
 
-                    NeuroGuideFocusMeterExperience.system.currentLevel--;
+                    int _levelsToLose = (int)NeuroGuideFocusMeterExperience.system.options.numOfLevelsGained;
+
+                    NeuroGuideFocusMeterExperience.system.currentLevel -= _levelsToLose;
 
                     if (NeuroGuideFocusMeterExperience.system.currentLevel < 0)
                     {
                         NeuroGuideFocusMeterExperience.system.currentLevel = 0;
                     }
 
-
-
                     scoreIsAboveThreshold = false;
 
                     sendOnBelowThresholdCallback = true;
-
 
                     switch (NeuroGuideFocusMeterExperience.system.currentLevel)
                     {
@@ -314,54 +300,48 @@ namespace gambit.neuroguide
                             system.currentProgressInSeconds = .0f;
                             system.options.threshold = .2f;
 
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 0");
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 0");
 
                             break;
 
                         case 1:
                             system.currentProgressInSeconds = 0.625f;
                             system.options.threshold = .4f;
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 1");
+
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 1");
 
                             break;
 
                         case 2:
-                            //system.currentScore = .0f;
-                            //system.currentProgressInSeconds = .0f;
-
-                            //system.currentScore = .45f;
                             system.currentProgressInSeconds = 1.25f;
                             system.options.threshold = .6f;
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 2");
+
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 2");
 
                             break;
 
                         case 3:
-                            //system.currentScore = .0f;
-                            //system.currentProgressInSeconds = .0f;
-
-                            //system.currentScore = .65f;
                             system.currentProgressInSeconds = 1.875f;
                             system.options.threshold = .8f;
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 3");
+
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 3");
 
                             break;
 
                         case 4:
 
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 4");
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 4");
 
                             break;
 
                         case 5:
 
-
-                            Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 5");
+                            system.options.threshold = 1.1f;
+                            //Debug.Log("NeuroGuideFocusExperience.cs // CheckIfScoreIsBelowThreshold Level 5");
 
                             break;
                     }
                 }
-
             }
 
         } //END CheckIfScoreIsBelowThreshold Method
