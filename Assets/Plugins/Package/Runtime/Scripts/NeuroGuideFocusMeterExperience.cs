@@ -154,24 +154,120 @@ namespace gambit.neuroguide
             }
 
 
-            // If in the reward state, add time. If not, subtract time.
-            // Time.deltaTime ensures the change is frame-rate independent.
-            if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+            switch (system.currentLevel)
             {
-                system.currentProgressInSeconds += Time.deltaTime * system.options.gainingFocusMultiplier;
-                system.preventThresholdLength += Time.deltaTime * system.options.gainingFocusMultiplier;
-            }
-            else
-            {
-                system.currentProgressInSeconds -= Time.deltaTime * system.options.losingFocusMultiplier;
-                system.preventThresholdLength += Time.deltaTime * system.options.losingFocusMultiplier;
+                case 0:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[0].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[0].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[0].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[0].losingFocusMultiplier;
+                    }
+
+                    break;
+
+                case 1:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[1].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[1].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[1].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[1].losingFocusMultiplier;
+                    }
+
+                    break;
+
+                case 2:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[2].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[2].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[2].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[2].losingFocusMultiplier;
+                    }
+
+                    break;
+
+                case 3:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[3].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[3].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[3].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[3].losingFocusMultiplier;
+                    }
+
+                    break;
+
+                case 4:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[4].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[4].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[4].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[4].losingFocusMultiplier;
+                    }
+
+                    break;
+
+                case 5:
+
+                    // If in the reward state, add time. If not, subtract time.
+                    // Time.deltaTime ensures the change is frame-rate independent.
+                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    {
+                        system.currentProgressInSeconds += Time.deltaTime * system.options.stages[5].gainingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[5].gainingFocusMultiplier;
+                    }
+                    else
+                    {
+                        system.currentProgressInSeconds -= Time.deltaTime * system.options.stages[5].losingFocusMultiplier;
+                        system.preventThresholdLength += Time.deltaTime * system.options.stages[5].losingFocusMultiplier;
+                    }
+
+                    break;
             }
 
             /*
-            Debug.Log("CurrentProgressInSeconds: " + system.currentProgressInSeconds);
-            Debug.Log("CurrentScore: " + system.currentScore);
-            Debug.Log("PreventThresholdPassedLength: " + system.preventThresholdLength);
+            if(system.options.showDebugLogs == true)
+            {
+                Debug.Log("CurrentProgressInSeconds: " + system.currentProgressInSeconds);
+                Debug.Log("CurrentScore: " + system.currentScore);
+                Debug.Log("PreventThresholdPassedLength: " + system.preventThresholdLength);
+            }
             */
+
             // Clamp the progress to ensure it doesn't go below 0 or above the total duration.
             system.currentProgressInSeconds = Mathf.Clamp(system.currentProgressInSeconds, 0f, system.options.totalDurationInSeconds);
 
@@ -594,6 +690,9 @@ namespace gambit.neuroguide
             /// </summary>
             public Action<float> OnFocusDataUpdate;
 
+            /// <summary>
+            /// List of each stage/levels and their properties that affect the way the experience plays
+            /// </summary>
             public List<Stages> stages = new List<Stages>();
 
             [System.Serializable]
@@ -648,7 +747,7 @@ namespace gambit.neuroguide
             /// <summary>
             /// The current level the user is at
             /// </summary>
-            public int currentLevel;
+            public int currentLevel = 0;
 
             /// <summary>
             /// Determines if we have reached the threshold to advance to the next level
