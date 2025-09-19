@@ -58,26 +58,6 @@ namespace gambit.neuroguide
         public float preventThresholdPassedLength = 2f;
 
         /// <summary>
-        /// How fast we gain focus
-        /// </summary>
-        public float gainingFocusMuliplier;
-
-        /// <summary>
-        /// How fast we lose focus
-        /// </summary>
-        public float losingFocusMuliplier;
-
-        /// <summary>
-        /// How many levels we go up when we level up
-        /// </summary>
-        public float numOfLevelsGained;
-
-        /// <summary>
-        /// How many levels we go down when we level down
-        /// </summary>
-        public float numOfLevelsLost;
-
-        /// <summary>
         /// Each stages with its own specific configurations for how it works
         /// </summary>
         public List<NeuroGuideFocusMeterExperience.Options.Stages> stages = new List<NeuroGuideFocusMeterExperience.Options.Stages>();
@@ -158,12 +138,6 @@ namespace gambit.neuroguide
                     totalDurationInSeconds = totalDurationInSeconds,
                     threshold = threshold,
                     preventThresholdPassedLength = preventThresholdPassedLength,
-
-                    gainingFocusMultiplier = gainingFocusMuliplier,
-                    losingFocusMultiplier = losingFocusMuliplier,
-
-                    numOfLevelsGained = numOfLevelsGained,
-                    numOfLevelsLost = numOfLevelsLost,
 
                     stages = stages,
 
