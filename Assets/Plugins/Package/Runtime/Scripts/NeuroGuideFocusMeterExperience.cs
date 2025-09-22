@@ -160,7 +160,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[0].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[0].gainingFocusMultiplier;
@@ -177,7 +177,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[1].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[1].gainingFocusMultiplier;
@@ -194,7 +194,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[2].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[2].gainingFocusMultiplier;
@@ -211,7 +211,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[3].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[3].gainingFocusMultiplier;
@@ -228,7 +228,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[4].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[4].gainingFocusMultiplier;
@@ -245,7 +245,7 @@ namespace gambit.neuroguide
 
                     // If in the reward state, add time. If not, subtract time.
                     // Time.deltaTime ensures the change is frame-rate independent.
-                    if (system.currentData.Value.isRecievingReward && system.isPlayingBackwards == false)
+                    if (system.currentData.Value.isRecievingReward)
                     {
                         system.currentProgressInSeconds += Time.deltaTime * system.options.stages[5].gainingFocusMultiplier;
                         system.preventThresholdLength += Time.deltaTime * system.options.stages[5].gainingFocusMultiplier;
